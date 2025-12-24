@@ -147,9 +147,9 @@ This project will build an attendance management system, but the initial setup i
 
 ### Target System Features (Future)
 
-- 出退勤記録
-- 休暇申請と承認
-- 勤怠データの集計とレポート
-- ユーザー管理
+- 出退勤記録 (Clock in/out recording)
+- 休暇申請と承認 (Leave request and approval)
+- 勤怠データの集計とレポート (Attendance data aggregation and reporting)
+- ユーザー管理 (User management)
 
 These features will be specified and implemented in future iterations following the spec-driven development workflow.
