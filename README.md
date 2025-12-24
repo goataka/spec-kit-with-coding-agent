@@ -1,18 +1,16 @@
-# 勤怠管理システム (Attendance Management System)
+# 勤怠管理システム
 
 このプロジェクトは、[spec-kit](https://github.com/github/spec-kit)を使用した仕様駆動開発により構築される勤怠管理システムです。
 
-This project is an attendance management system built using specification-driven development with [spec-kit](https://github.com/github/spec-kit).
+## 🌏 言語ポリシー
 
-## 🌏 Language Policy / 言語ポリシー
-
-- **仕様書・要件定義**: 日本語 (Japanese)
-- **コード・技術文書**: 英語 (English)
-- **コミュニケーション**: 日本語 (Japanese)
+- **仕様書・要件定義**: 日本語
+- **コード・技術文書**: 英語
+- **コミュニケーション**: 日本語
 
 詳細は [memory/constitution.md](memory/constitution.md) を参照してください。
 
-## 🏗️ Project Structure / プロジェクト構造
+## 🏗️ プロジェクト構造
 
 ```
 .
@@ -30,17 +28,15 @@ This project is an attendance management system built using specification-driven
 └── README.md          # このファイル
 ```
 
-## 🚀 Spec-Kit Setup / セットアップ
+## 🚀 Spec-Kit セットアップ
 
 このプロジェクトでは、DevContainerを使用した一貫性のある開発環境を提供します。
 
-This project provides a consistent development environment using DevContainer.
+### DevContainerの使用（推奨）
 
-### DevContainerの使用 / Using DevContainer (推奨 / Recommended)
+**VS Codeでの使用**:
 
-**VS Codeでの使用 / For VS Code**:
-
-1. VS Codeで開く / Open in VS Code
+1. VS Codeで開く
 2. コマンドパレット: "Dev Containers: Reopen in Container"
 3. コンテナが起動し、自動的にspec-kitがセットアップされます
 
@@ -48,9 +44,7 @@ This project provides a consistent development environment using DevContainer.
 
 エージェントは `.devcontainer/devcontainer.json` の設定を参照し、自動的に同じ環境を構築します。
 
-The agent references `.devcontainer/devcontainer.json` and automatically builds the same environment.
-
-### 自動セットアップの内容 / What Gets Setup Automatically
+### 自動セットアップの内容
 
 `.devcontainer/devcontainer.json` と `.github/workflows/copilot-setup-steps.yml` により：
 
@@ -59,19 +53,17 @@ The agent references `.devcontainer/devcontainer.json` and automatically builds 
 - ✅ VS Code extensions (Copilot, Python)
 - ✅ 必要な環境変数とPATH設定
 
-### 手動セットアップ / Manual Setup (非推奨 / Not Recommended)
+### 手動セットアップ（非推奨）
 
 DevContainerを使わずにローカル環境でspec-kitを使用する場合：
 
-If you want to use spec-kit without DevContainer:
-
-#### Prerequisites / 前提条件
+#### 前提条件
 
 - Python 3.11+
 - Git
 - uv (Python package manager)
 
-#### Installation / インストール
+#### インストール
 
 ```bash
 # Install uv
@@ -84,7 +76,7 @@ uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
 specify --help
 ```
 
-### Workflow Commands / ワークフローコマンド
+### ワークフローコマンド
 
 このプロジェクトではGitHub Copilot Coding Agent経由で以下のコマンドを使用します：
 
@@ -94,50 +86,50 @@ specify --help
 - `/tasks`: 実装タスクの作成
 - `/implement`: タスクの実装
 
-## 📖 Specification-Driven Development Workflow
+## 📖 仕様駆動開発ワークフロー
 
-### 1. 憲法の確認 (Review Constitution)
+### 1. 憲法の確認
 
 プロジェクトの原則とガイドラインを確認：
 ```
 /constitution
 ```
 
-### 2. 機能仕様の作成 (Create Specification)
+### 2. 機能仕様の作成
 
 実装したい機能を仕様化：
 ```
 /specify <機能の説明>
 ```
 
-### 3. 技術計画の作成 (Create Technical Plan)
+### 3. 技術計画の作成
 
 仕様に基づいた技術的なアプローチを計画：
 ```
 /plan
 ```
 
-### 4. タスクの作成 (Create Tasks)
+### 4. タスクの作成
 
 実装可能な作業単位に分解：
 ```
 /tasks
 ```
 
-### 5. 実装 (Implementation)
+### 5. 実装
 
 タスクを実装：
 ```
 /implement
 ```
 
-## 📝 Documentation / ドキュメント
+## 📝 ドキュメント
 
-- [Constitution (憲法)](memory/constitution.md): プロジェクトの原則とガイドライン
-- Specifications (仕様書): `specs/`ディレクトリに機能ごとに作成
-- Implementation Docs (実装文書): `docs/`ディレクトリに確定版を保存
+- [憲法](memory/constitution.md): プロジェクトの原則とガイドライン
+- 仕様書: `specs/`ディレクトリに機能ごとに作成
+- 実装文書: `docs/`ディレクトリに確定版を保存
 
-## 🎯 Initial Setup Status / 初期セットアップ状況
+## 🎯 初期セットアップ状況
 
 ✅ spec-kit minimal setup completed:
 - ✅ uv installed
@@ -146,23 +138,22 @@ specify --help
 - ✅ Constitution with Japanese language support created
 - ✅ Templates configured
 
-## 🔮 Future Development / 今後の開発
+## 🔮 今後の開発
 
 勤怠管理システムの主要機能：
-- 出退勤記録 (Clock in/out recording)
-- 休暇申請と承認 (Leave request and approval)
-- 勤怠データの集計とレポート (Attendance data aggregation and reporting)
-- ユーザー管理 (User management)
+- 出退勤記録
+- 休暇申請と承認
+- 勤怠データの集計とレポート
+- ユーザー管理
 
 これらの機能は、spec-kitのワークフローに従って順次実装していきます。
 
-## 📚 Resources / リソース
+## 📚 リソース
 
 - [Spec-Kit Official Documentation](https://github.com/github/spec-kit)
 - [Spec-Kit Website](https://speckit.org/)
 - [GitHub Blog: Spec-driven Development](https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/)
 
-## 🤝 Contributing / 貢献
+## 🤝 貢献
 
 プロジェクト憲法に従って開発を進めてください。
-Please follow the project constitution when contributing.
