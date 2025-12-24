@@ -110,6 +110,37 @@ Address violations in the next sprint if found.
 
 ## Tools and Workflow
 
+### Development Environment / 開発環境
+
+**DevContainerの使用を推奨 / Use of DevContainer (Recommended)**
+
+このプロジェクトでは、開発環境のセットアップにDevContainerを使用します。
+This project uses DevContainer for development environment setup.
+
+**理由 / Rationale**:
+- 一貫した開発環境の提供 / Provides consistent development environment
+- 自動セットアップの簡素化 / Simplifies automatic setup
+- ローカル開発とCopilot Agentの両方で同じ環境を使用 / Same environment for both local dev and Copilot Agent
+- 将来の依存関係追加が容易 / Easy to add future dependencies
+
+**設定ファイル / Configuration Files**:
+- `.devcontainer/devcontainer.json` - DevContainer設定
+- `.github/workflows/copilot-setup-steps.yml` - DevContainer設定を参照
+
+**新しいツールや依存関係の追加 / Adding New Tools or Dependencies**:
+
+将来、新しいセットアップ要件が発生した場合、以下の手順で追加すること：
+When new setup requirements arise in the future, add them as follows:
+
+1. `.devcontainer/devcontainer.json` の `postCreateCommand` または `features` を更新
+   Update `postCreateCommand` or `features` in `.devcontainer/devcontainer.json`
+
+2. `.github/workflows/copilot-setup-steps.yml` も必要に応じて更新
+   Update `.github/workflows/copilot-setup-steps.yml` if needed
+
+3. この憲法を更新し、追加理由を記録
+   Update this constitution and document the reason for addition
+
 ### Spec-Kit Usage
 
 このプロジェクトでは、GitHub Copilot Coding Agent経由でspec-kitを使用します。
@@ -125,6 +156,12 @@ This project uses spec-kit through GitHub Copilot Coding Agent.
 ### Documentation Structure
 
 ```
+.devcontainer/      # DevContainer設定
+  devcontainer.json # 開発環境定義
+  README.md         # DevContainer使用ガイド
+.github/
+  workflows/
+    copilot-setup-steps.yml  # Copilot Agent自動セットアップ
 .specify/           # spec-kit設定とテンプレート
   templates/        # ドキュメントテンプレート
   commands/         # ワークフローコマンド定義

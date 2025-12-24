@@ -16,6 +16,12 @@ This project is an attendance management system built using specification-driven
 
 ```
 .
+├── .devcontainer/     # DevContainer設定
+│   ├── devcontainer.json
+│   └── README.md
+├── .github/
+│   └── workflows/
+│       └── copilot-setup-steps.yml  # 自動セットアップ
 ├── .specify/          # spec-kit設定とテンプレート
 │   └── templates/     # ドキュメントテンプレート
 ├── memory/            # プロジェクト憲法と記憶
@@ -26,26 +32,38 @@ This project is an attendance management system built using specification-driven
 
 ## 🚀 Spec-Kit Setup / セットアップ
 
-このプロジェクトでは、GitHub Copilot Coding Agent経由でspec-kitを使用します。
+このプロジェクトでは、DevContainerを使用した一貫性のある開発環境を提供します。
 
-### 自動セットアップ / Automatic Setup (推奨 / Recommended)
+This project provides a consistent development environment using DevContainer.
 
-**GitHub Copilot Coding Agentを使用する場合、セットアップは自動的に実行されます。**
+### DevContainerの使用 / Using DevContainer (推奨 / Recommended)
 
-When using GitHub Copilot Coding Agent, setup is automatic.
+**VS Codeでの使用 / For VS Code**:
 
-プロジェクトには `.github/workflows/copilot-setup-steps.yml` が含まれており、以下を自動的にセットアップします：
-- Python 3.12 with uv (pre-installed Docker image)
-- spec-kit CLI
-- 必要な依存関係
+1. VS Codeで開く / Open in VS Code
+2. コマンドパレット: "Dev Containers: Reopen in Container"
+3. コンテナが起動し、自動的にspec-kitがセットアップされます
 
-このファイルにより、エージェントの起動時間が大幅に短縮されます。
+**GitHub Copilot Coding Agentでの使用**:
 
-### 手動セットアップ / Manual Setup (ローカル開発用 / For Local Development)
+エージェントは `.devcontainer/devcontainer.json` の設定を参照し、自動的に同じ環境を構築します。
 
-ローカル環境でspec-kitを使用する場合：
+The agent references `.devcontainer/devcontainer.json` and automatically builds the same environment.
 
-For local development, manually install:
+### 自動セットアップの内容 / What Gets Setup Automatically
+
+`.devcontainer/devcontainer.json` と `.github/workflows/copilot-setup-steps.yml` により：
+
+- ✅ Python 3.12 with uv (pre-installed Docker image)
+- ✅ spec-kit CLI
+- ✅ VS Code extensions (Copilot, Python)
+- ✅ 必要な環境変数とPATH設定
+
+### 手動セットアップ / Manual Setup (非推奨 / Not Recommended)
+
+DevContainerを使わずにローカル環境でspec-kitを使用する場合：
+
+If you want to use spec-kit without DevContainer:
 
 #### Prerequisites / 前提条件
 

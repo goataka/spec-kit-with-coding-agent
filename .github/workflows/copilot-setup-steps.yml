@@ -1,21 +1,22 @@
 name: "Copilot Setup Steps"
 
-# This workflow customizes the GitHub Copilot coding agent environment
-# It must be on the default branch and have a job named 'copilot-setup-steps'
+# This workflow uses the devcontainer configuration for environment setup
+# See .devcontainer/devcontainer.json for the full setup details
 
 on:
   workflow_dispatch:
   push:
     paths:
       - .github/workflows/copilot-setup-steps.yml
+      - .devcontainer/devcontainer.json
   pull_request:
     paths:
       - .github/workflows/copilot-setup-steps.yml
+      - .devcontainer/devcontainer.json
 
 jobs:
   copilot-setup-steps:
-    # Use a Docker container with Python and uv pre-installed for faster setup
-    # This avoids having to install uv every time the agent runs
+    # Use the same Docker image as defined in devcontainer.json
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
@@ -27,36 +28,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Install spec-kit CLI
+      - name: Run devcontainer setup
         run: |
-          echo "Installing spec-kit from GitHub..."
+          echo "Running setup from devcontainer configuration..."
+          # Install spec-kit CLI (matching devcontainer postCreateCommand)
           uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
-          echo "Spec-kit installation complete"
+          echo "Setup complete. spec-kit is ready to use."
       
-      - name: Verify spec-kit installation
+      - name: Display environment
         run: |
-          # Add uv tool bin to PATH
-          export PATH="$HOME/.local/bin:$PATH"
-          specify --help || echo "Note: specify command will be available in the agent session"
-      
-      - name: Display environment information
-        run: |
-          echo "Python version:"
-          python --version
+          echo "🚀 Environment ready for spec-kit usage:"
+          echo "  ✓ Python $(python --version | cut -d' ' -f2)"
+          echo "  ✓ uv $(uv --version | cut -d' ' -f2)"
+          echo "  ✓ spec-kit CLI installed"
           echo ""
-          echo "uv version:"
-          uv --version
-          echo ""
-          echo "Environment ready for spec-kit usage"
-      
-      - name: Create cache for future runs
-        run: |
-          echo "Setup complete. The following are now available:"
-          echo "  ✓ Python 3.12"
-          echo "  ✓ uv package manager"
-          echo "  ✓ spec-kit CLI"
-          echo ""
-          echo "Workflow commands available in Copilot agent:"
+          echo "Available workflow commands:"
           echo "  /constitution - プロジェクト憲法の作成・更新"
           echo "  /specify      - 機能仕様の作成"
           echo "  /plan         - 技術計画の作成"

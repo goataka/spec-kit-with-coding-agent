@@ -6,37 +6,57 @@
 
 This document describes the initial spec-kit setup for this project.
 
-## 自動セットアップ / Automatic Setup (GitHub Copilot Coding Agent)
+## DevContainerによる自動セットアップ / Automatic Setup with DevContainer (推奨 / Recommended)
 
-### copilot-setup-steps.yml による自動化
+### DevContainerの使用
 
-このプロジェクトには `.github/workflows/copilot-setup-steps.yml` ファイルが含まれており、GitHub Copilot Coding Agentが自動的に環境をセットアップします。
+このプロジェクトでは、開発環境のセットアップにDevContainerを使用します。
 
-This project includes `.github/workflows/copilot-setup-steps.yml` which automatically sets up the environment when using GitHub Copilot Coding Agent.
+This project uses DevContainer for development environment setup.
 
-#### 自動セットアップの内容 / What Gets Installed Automatically
+#### VS Codeでの使用 / Using with VS Code
 
-1. **Docker Image**: `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`
+1. **VS Codeでプロジェクトを開く** / Open project in VS Code
+2. **コマンドパレットを開く**: `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
+3. **"Dev Containers: Reopen in Container"** を選択
+4. コンテナが自動的にビルドされ、spec-kitがインストールされます
+
+#### GitHub Copilot Coding Agentでの使用
+
+Copilot Agentは `.devcontainer/devcontainer.json` の設定を参照し、`.github/workflows/copilot-setup-steps.yml` により自動的に環境を構築します。
+
+Copilot Agent references `.devcontainer/devcontainer.json` and automatically builds the environment via `.github/workflows/copilot-setup-steps.yml`.
+
+#### DevContainerの内容 / What's in the DevContainer
+
+1. **Base Image**: `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`
    - Python 3.12
    - uv package manager (pre-installed)
    
-2. **Spec-Kit CLI**: 自動インストール / Automatically installed
-   - `uv tool install` によるインストール
-   - GitHubリポジトリから最新版を取得
+2. **自動インストール / Automatic Installation**:
+   - spec-kit CLI
+   - Git
+   
+3. **VS Code Extensions**:
+   - Python
+   - GitHub Copilot
+   - GitHub Copilot Chat
 
-3. **環境確認**: 自動検証 / Automatic verification
-   - Python, uv, spec-kit の動作確認
+4. **環境設定 / Environment**:
+   - PATH設定（spec-kitコマンドが使用可能）
+   - プロジェクトディレクトリのマウント
 
 #### メリット / Benefits
 
-- ✅ 毎回の手動セットアップが不要 / No manual setup required each time
-- ✅ 起動時間の大幅な短縮 / Significantly faster startup
-- ✅ Docker イメージによる高速化 / Faster with pre-built Docker image
-- ✅ 一貫した環境 / Consistent environment across all agent sessions
+- ✅ 一貫した開発環境 / Consistent development environment
+- ✅ ローカルとCopilot Agentで同じ環境 / Same environment for local and Copilot Agent
+- ✅ 自動セットアップ / Automatic setup
+- ✅ 将来の依存関係追加が容易 / Easy to add future dependencies
+- ✅ 起動時間の短縮 / Faster startup
 
 #### 動作確認方法 / How to Verify
 
-GitHub Copilot Coding Agent のセッション内で以下を実行：
+DevContainer内で以下を実行：
 
 ```bash
 # Check Python version
@@ -45,15 +65,27 @@ python --version
 # Check uv version
 uv --version
 
-# Check spec-kit (may need PATH configuration)
+# Check spec-kit
 specify --help
 ```
 
-## 手動インストール / Manual Installation (ローカル開発用 / For Local Development)
+### 新しい依存関係の追加 / Adding New Dependencies
 
-ローカル環境でspec-kitを使用する場合の手順です。
+**重要**: 将来、新しいツールや依存関係が必要になった場合、DevContainerに追加してください。
 
-For local development without Copilot agent:
+**Important**: When new tools or dependencies are needed in the future, add them to the DevContainer.
+
+1. `.devcontainer/devcontainer.json` を編集
+2. `postCreateCommand` または `features` を更新
+3. コンテナを再ビルド: "Dev Containers: Rebuild Container"
+
+詳細は `.devcontainer/README.md` を参照してください。
+
+## 手動インストール / Manual Installation (非推奨 / Not Recommended)
+
+DevContainerを使わずにローカル環境でspec-kitを使用する場合の手順です。
+
+For local development without DevContainer:
 
 ### 1. uv (Python Package Manager)
 
@@ -80,7 +112,13 @@ specify --help
 ```
 .github/
 └── workflows/
-    └── copilot-setup-steps.yml  # 自動セットアップ定義
+.devcontainer/
+├── devcontainer.json           # DevContainer設定
+└── README.md                   # DevContainer使用ガイド
+
+.github/
+└── workflows/
+    └── copilot-setup-steps.yml  # Copilot Agent自動セットアップ（DevContainer参照）
 
 .specify/
 ├── templates/              # ドキュメントテンプレート
@@ -95,7 +133,7 @@ specify --help
 │   └── tasks-template.md  # タスクテンプレート
 
 memory/
-└── constitution.md         # プロジェクト憲法
+└── constitution.md         # プロジェクト憲法（DevContainer使用を規定）
 
 specs/                      # 機能仕様書（ブランチごと）
 
@@ -107,9 +145,9 @@ docs/                       # 確定した仕様と実装ドキュメント
 
 ### Important / 重要
 
-このプロジェクトでは、通常のCLI使用ではなく、GitHub Copilot Coding Agent経由でspec-kitを使用します。
+このプロジェクトでは、DevContainerベースの環境でspec-kitを使用します。
 
-This project uses spec-kit through GitHub Copilot Coding Agent, not through normal CLI usage.
+This project uses spec-kit in a DevContainer-based environment.
 
 ### Workflow Commands / ワークフローコマンド
 
