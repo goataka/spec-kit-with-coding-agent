@@ -52,13 +52,13 @@ description: "Task list template for feature implementation"
   ============================================================================
 -->
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 1: Setup（共有インフラストラクチャ）
 
 **目的**: プロジェクトの初期化と基本構造
 
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize [language] project with [framework] dependencies
-- [ ] T003 [P] Configure linting and formatting tools
+- [ ] T001 実装計画に従ってプロジェクト構造を作成
+- [ ] T002 [言語]プロジェクトを[フレームワーク]依存関係で初期化
+- [ ] T003 [P] リンティングとフォーマットツールを設定
 
 ---
 
@@ -70,18 +70,18 @@ description: "Task list template for feature implementation"
 
 基礎タスクの例（プロジェクトに応じて調整）:
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
+- [ ] T004 データベーススキーマとマイグレーションフレームワークのセットアップ
+- [ ] T005 [P] 認証・認可フレームワークの実装
+- [ ] T006 [P] API ルーティングとミドルウェア構造のセットアップ
+- [ ] T007 すべてのストーリーが依存するベースモデル/エンティティの作成
+- [ ] T008 エラーハンドリングとロギングインフラの設定
+- [ ] T009 環境設定管理のセットアップ
 
 **チェックポイント**: 基礎の準備完了 - ユーザーストーリーの実装を並行して開始可能
 
 ---
 
-## Phase 3: User Story 1 - [Title] (Priority: P1) 🎯 MVP
+## Phase 3: ユーザーストーリー 1 - [タイトル]（優先度: P1）🎯 MVP
 
 **目標**: [このストーリーが提供するものの簡単な説明]
 
@@ -91,23 +91,23 @@ description: "Task list template for feature implementation"
 
 > **注意: これらのテストを最初に書き、実装前に失敗することを確認してください**
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T010 [P] [US1] tests/contract/test_[name].py の[エンドポイント]のコントラクトテスト
+- [ ] T011 [P] [US1] tests/integration/test_[name].py の[ユーザージャーニー]の統合テスト
 
 ### ユーザーストーリー 1 の実装
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T012 [P] [US1] src/models/[entity1].py に[Entity1]モデルを作成
+- [ ] T013 [P] [US1] src/models/[entity2].py に[Entity2]モデルを作成
+- [ ] T014 [US1] src/services/[service].py に[Service]を実装（T012, T013 に依存）
+- [ ] T015 [US1] src/[location]/[file].py に[エンドポイント/機能]を実装
+- [ ] T016 [US1] バリデーションとエラーハンドリングを追加
+- [ ] T017 [US1] ユーザーストーリー 1 の操作用ロギングを追加
 
 **チェックポイント**: この時点で、ユーザーストーリー 1 は完全に機能し、独立してテスト可能であるべきです
 
 ---
 
-## Phase 4: User Story 2 - [Title] (Priority: P2)
+## Phase 4: ユーザーストーリー 2 - [タイトル]（優先度: P2）
 
 **目標**: [このストーリーが提供するものの簡単な説明]
 
@@ -115,21 +115,21 @@ description: "Task list template for feature implementation"
 
 ### ユーザーストーリー 2 のテスト（オプション - テストが要求された場合のみ）⚠️
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T018 [P] [US2] tests/contract/test_[name].py の[エンドポイント]のコントラクトテスト
+- [ ] T019 [P] [US2] tests/integration/test_[name].py の[ユーザージャーニー]の統合テスト
 
 ### ユーザーストーリー 2 の実装
 
-- [ ] T020 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T021 [US2] Implement [Service] in src/services/[service].py
-- [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T020 [P] [US2] src/models/[entity].py に[Entity]モデルを作成
+- [ ] T021 [US2] src/services/[service].py に[Service]を実装
+- [ ] T022 [US2] src/[location]/[file].py に[エンドポイント/機能]を実装
+- [ ] T023 [US2] ユーザーストーリー 1 のコンポーネントと統合（必要な場合）
 
 **チェックポイント**: この時点で、ユーザーストーリー 1 と 2 の両方が独立して動作するべきです
 
 ---
 
-## Phase 5: User Story 3 - [Title] (Priority: P3)
+## Phase 5: ユーザーストーリー 3 - [タイトル]（優先度: P3）
 
 **目標**: [このストーリーが提供するものの簡単な説明]
 
@@ -137,14 +137,14 @@ description: "Task list template for feature implementation"
 
 ### ユーザーストーリー 3 のテスト（オプション - テストが要求された場合のみ）⚠️
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T024 [P] [US3] tests/contract/test_[name].py の[エンドポイント]のコントラクトテスト
+- [ ] T025 [P] [US3] tests/integration/test_[name].py の[ユーザージャーニー]の統合テスト
 
 ### ユーザーストーリー 3 の実装
 
-- [ ] T026 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T027 [US3] Implement [Service] in src/services/[service].py
-- [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T026 [P] [US3] src/models/[entity].py に[Entity]モデルを作成
+- [ ] T027 [US3] src/services/[service].py に[Service]を実装
+- [ ] T028 [US3] src/[location]/[file].py に[エンドポイント/機能]を実装
 
 **チェックポイント**: すべてのユーザーストーリーが独立して機能するようになりました
 
@@ -158,12 +158,12 @@ description: "Task list template for feature implementation"
 
 **目的**: 複数のユーザーストーリーに影響する改善
 
-- [ ] TXXX [P] Documentation updates in docs/
-- [ ] TXXX Code cleanup and refactoring
-- [ ] TXXX Performance optimization across all stories
-- [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
-- [ ] TXXX Security hardening
-- [ ] TXXX Run quickstart.md validation
+- [ ] TXXX [P] docs/ のドキュメント更新
+- [ ] TXXX コードのクリーンアップとリファクタリング
+- [ ] TXXX すべてのストーリーにわたるパフォーマンス最適化
+- [ ] TXXX [P] 追加のユニットテスト（要求された場合）tests/unit/ 内
+- [ ] TXXX セキュリティの強化
+- [ ] TXXX quickstart.md の検証を実行
 
 ---
 
@@ -206,13 +206,13 @@ description: "Task list template for feature implementation"
 ## 並行実行の例: ユーザーストーリー 1
 
 ```bash
-# ユーザーストーリー 1 のすべてのテストを一緒に起動 (テストが要求された場合):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
-Task: "Integration test for [user journey] in tests/integration/test_[name].py"
+# ユーザーストーリー 1 のすべてのテストを一緒に起動（テストが要求された場合）:
+Task: "tests/contract/test_[name].py の[エンドポイント]のコントラクトテスト"
+Task: "tests/integration/test_[name].py の[ユーザージャーニー]の統合テスト"
 
 # ユーザーストーリー 1 のすべてのモデルを一緒に起動:
-Task: "Create [Entity1] model in src/models/[entity1].py"
-Task: "Create [Entity2] model in src/models/[entity2].py"
+Task: "src/models/[entity1].py に[Entity1]モデルを作成"
+Task: "src/models/[entity2].py に[Entity2]モデルを作成"
 ```
 
 ---
