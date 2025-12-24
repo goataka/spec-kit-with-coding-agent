@@ -159,15 +159,23 @@
 このプロジェクトでは、GitHub Copilot Coding Agent経由でspec-kitを使用します。
 
 **Workflow Commands**:
+
+コアワークフロー:
 - `/constitution`: プロジェクト憲法の作成・更新
 - `/specify`: 機能仕様の作成
 - `/plan`: 技術計画の作成
 - `/tasks`: 実装タスクの作成
 - `/implement`: タスクの実装
 
+補助コマンド:
+- `/clarify`: 仕様の不明瞭な部分を対話的に明確化
+- `/analyze`: spec/plan/tasksの一貫性と品質を分析
+- `/checklist`: カスタムチェックリストを生成
+- `/taskstoissues`: タスクをGitHub Issueに変換
+
 **Agent Operation Rule**:
 
-- 指示はspec-kitコマンド（`/specify`, `/plan`, `/tasks`, `/implement`）を使用
+- 指示はspec-kitコマンドを使用
 - 直接実装を行わず、仕様化・計画化してから実装
 - 仕様駆動開発の原則を維持し、ドキュメントと実装の整合性を確保
 
