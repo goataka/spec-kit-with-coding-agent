@@ -2,22 +2,18 @@
 
 このディレクトリには、spec-kit開発環境のDevContainerの設定が含まれています。
 
-This directory contains the DevContainer configuration for the spec-kit development environment.
-
-## 概要 / Overview
+## 概要
 
 DevContainerを使用することで、以下のメリットがあります：
 
-By using DevContainer, you get:
+- ✅ 一貫した開発環境
+- ✅ 自動セットアップ
+- ✅ ローカル開発とCopilot Agentの両方で使用可能
+- ✅ 将来の依存関係も簡単に追加可能
 
-- ✅ 一貫した開発環境 / Consistent development environment
-- ✅ 自動セットアップ / Automatic setup
-- ✅ ローカル開発とCopilot Agentの両方で使用可能 / Works for both local dev and Copilot Agent
-- ✅ 将来の依存関係も簡単に追加可能 / Easy to add future dependencies
+## 設定内容
 
-## 設定内容 / Configuration
-
-### Base Image / ベースイメージ
+### ベースイメージ
 
 ```
 ghcr.io/astral-sh/uv:python3.12-bookworm-slim
@@ -26,19 +22,19 @@ ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 - Python 3.12
 - uv package manager (pre-installed)
 
-### 自動インストール / Automatic Installation
+### 自動インストール
 
 **postCreateCommand**:
 - spec-kit CLI のインストール
 - 環境の検証
 
-### VS Code 拡張機能 / VS Code Extensions
+### VS Code 拡張機能
 
 - Python
 - GitHub Copilot
 - GitHub Copilot Chat
 
-### マウント / Mounts
+### マウント
 
 プロジェクトの重要なディレクトリがコンテナにマウントされます：
 - `.specify/` - テンプレート
@@ -46,11 +42,11 @@ ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 - `specs/` - 仕様書
 - `docs/` - ドキュメント
 
-## 使用方法 / Usage
+## 使用方法
 
-### VS Codeでの使用 / Using with VS Code
+### VS Codeでの使用
 
-1. VS Codeで開く / Open in VS Code
+1. VS Codeで開く
 2. コマンドパレット: "Dev Containers: Reopen in Container"
 3. コンテナが起動し、自動セットアップが実行されます
 
@@ -58,17 +54,15 @@ ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 `.github/workflows/copilot-setup-steps.yml` がこの設定を参照し、同じ環境を構築します。
 
-## 新しい依存関係の追加 / Adding New Dependencies
+## 新しい依存関係の追加
 
 将来、新しいツールや依存関係が必要になった場合：
-
-When you need to add new tools or dependencies in the future:
 
 1. `devcontainer.json` の `postCreateCommand` を更新
 2. または新しい `features` を追加
 3. コンテナを再ビルド: "Dev Containers: Rebuild Container"
 
-### 例 / Examples
+### 例
 
 ```json
 {
@@ -81,16 +75,16 @@ When you need to add new tools or dependencies in the future:
 }
 ```
 
-## トラブルシューティング / Troubleshooting
+## トラブルシューティング
 
-### コンテナが起動しない / Container won't start
+### コンテナが起動しない
 
 ```bash
 # コンテナを再ビルド
 Dev Containers: Rebuild Container Without Cache
 ```
 
-### spec-kitが見つからない / spec-kit not found
+### spec-kitが見つからない
 
 ```bash
 # PATH を確認
@@ -100,7 +94,7 @@ echo $PATH
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
 ```
 
-## 参考資料 / References
+## 参考資料
 
 - [VS Code DevContainers Documentation](https://code.visualstudio.com/docs/devcontainers/containers)
 - [DevContainer Features](https://containers.dev/features)

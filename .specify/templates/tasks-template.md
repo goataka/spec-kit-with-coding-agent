@@ -3,46 +3,39 @@
 description: "Task list template for feature implementation"
 ---
 
-# タスク / Tasks: [FEATURE NAME]
+# タスク: [FEATURE NAME]
 
 **Input**: Design documents from `/specs/[###-feature-name]/`
-**Prerequisites**: plan.md (必須 / required), spec.md (ユーザーストーリーに必須 / required for user stories), research.md, data-model.md, contracts/
+**Prerequisites**: plan.md (必須), spec.md (ユーザーストーリーに必須), research.md, data-model.md, contracts/
 
 **Tests**: 以下の例にはテストタスクが含まれています。テストはオプションです - 機能仕様で明示的に要求された場合のみ含めてください。
-The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
 
 **Organization**: タスクはユーザーストーリーごとにグループ化され、各ストーリーを独立して実装・テスト可能にします。
-Tasks are grouped by user story to enable independent implementation and testing of each story.
 
 <!--
-  🌏 言語ポリシー / Language Policy:
+  🌏 言語ポリシー:
   - タスクの説明は日本語で記述してください
-    Task descriptions should be written in Japanese
   - ファイルパスやコード要素は英語のまま
-    File paths and code elements remain in English
   - 技術的な詳細は英語も併記して構いません
-    Technical details may include English alongside
 -->
 
-## フォーマット / Format: `[ID] [P?] [Story] 説明 / Description`
+## フォーマット: `[ID] [P?] [Story] 説明`
 
-- **[P]**: 並列実行可能（異なるファイル、依存関係なし） / Can run in parallel (different files, no dependencies)
-- **[Story]**: このタスクが属するユーザーストーリー（例: US1, US2, US3） / Which user story this task belongs to
-- 説明には正確なファイルパスを含めてください / Include exact file paths in descriptions
+- **[P]**: 並列実行可能（異なるファイル、依存関係なし）
+- **[Story]**: このタスクが属するユーザーストーリー（例: US1, US2, US3）
+- 説明には正確なファイルパスを含めてください
 
-## パス規約 / Path Conventions
+## パス規約
 
-- **単一プロジェクト / Single project**: `src/`, `tests/` at repository root
-- **Webアプリ / Web app**: `backend/src/`, `frontend/src/`
-- **モバイル / Mobile**: `api/src/`, `ios/src/` or `android/src/`
+- **単一プロジェクト**: `src/`, `tests/` at repository root
+- **Webアプリ**: `backend/src/`, `frontend/src/`
+- **モバイル**: `api/src/`, `ios/src/` or `android/src/`
 - 以下に示すパスは単一プロジェクトを想定 - plan.mdの構造に基づいて調整してください
-  Paths shown below assume single project - adjust based on plan.md structure
 
 <!-- 
   ============================================================================
-  重要 / IMPORTANT: 
+  重要: 
   以下のタスクは説明目的のサンプルタスクです。
-  The tasks below are SAMPLE TASKS for illustration purposes only.
   
   The /speckit.tasks command MUST replace these with actual tasks based on:
   - User stories from spec.md (with their priorities P1, P2, P3...)

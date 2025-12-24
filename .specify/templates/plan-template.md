@@ -1,26 +1,22 @@
-# 実装計画 / Implementation Plan: [FEATURE]
+# 実装計画: [FEATURE]
 
 **Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
 **Note**: このテンプレートは `/speckit.plan` コマンドで記入されます。実行ワークフローは `.specify/templates/commands/plan.md` を参照してください。
-This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 <!--
-  🌏 言語ポリシー / Language Policy:
+  🌏 言語ポリシー:
   - 技術的な詳細は英語で記述してください（コード、技術用語など）
-    Technical details should be written in English (code, technical terms, etc.)
   - 説明や理由付けは日本語でも構いません
-    Explanations and rationale may be in Japanese
   - アーキテクチャ図やコメントはバイリンガルが望ましい
-    Architecture diagrams and comments are preferably bilingual
 -->
 
-## 概要 / Summary
+## 概要
 
-[機能仕様から抽出: 主要な要件 + 調査からの技術的アプローチ / Extract from feature spec: primary requirement + technical approach from research]
+[機能仕様から抽出: 主要な要件 + 調査からの技術的アプローチ]
 
-## 技術コンテキスト / Technical Context
+## 技術コンテキスト
 
 <!--
   ACTION REQUIRED: Replace the content in this section with the technical details
