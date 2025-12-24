@@ -6,9 +6,9 @@ export class SpecKitDevStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // DynamoDB table for attendance management system
-    const attendanceTable = new dynamodb.Table(this, 'AttendanceTable', {
-      tableName: 'spec-kit-dev-attendance',
+    // DynamoDB table for clock-in/clock-out records
+    const clockTable = new dynamodb.Table(this, 'ClockTable', {
+      tableName: 'spec-kit-dev-clock',
       partitionKey: {
         name: 'userId',
         type: dynamodb.AttributeType.STRING,
@@ -25,12 +25,12 @@ export class SpecKitDevStack extends cdk.Stack {
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
     });
 
-    // Add tags to the attendance table
-    cdk.Tags.of(attendanceTable).add('Environment', 'development');
-    cdk.Tags.of(attendanceTable).add('Project', 'spec-kit-attendance');
+    // Add tags to the clock table
+    cdk.Tags.of(clockTable).add('Environment', 'development');
+    cdk.Tags.of(clockTable).add('Project', 'spec-kit-attendance');
 
     // Add GSI for querying by date
-    attendanceTable.addGlobalSecondaryIndex({
+    clockTable.addGlobalSecondaryIndex({
       indexName: 'DateIndex',
       partitionKey: {
         name: 'date',
@@ -42,65 +42,17 @@ export class SpecKitDevStack extends cdk.Stack {
       },
     });
 
-    // DynamoDB table for leave requests
-    const leaveRequestTable = new dynamodb.Table(this, 'LeaveRequestTable', {
-      tableName: 'spec-kit-dev-leave-requests',
-      partitionKey: {
-        name: 'requestId',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'userId',
-        type: dynamodb.AttributeType.STRING,
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      pointInTimeRecoverySpecification: {
-        pointInTimeRecoveryEnabled: true,
-      },
-      encryption: dynamodb.TableEncryption.AWS_MANAGED,
-    });
-
-    // Add tags to the leave request table
-    cdk.Tags.of(leaveRequestTable).add('Environment', 'development');
-    cdk.Tags.of(leaveRequestTable).add('Project', 'spec-kit-attendance');
-
-    // Add GSI for querying by user
-    leaveRequestTable.addGlobalSecondaryIndex({
-      indexName: 'UserIndex',
-      partitionKey: {
-        name: 'userId',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'status',
-        type: dynamodb.AttributeType.STRING,
-      },
-    });
-
     // Outputs
-    new cdk.CfnOutput(this, 'AttendanceTableName', {
-      value: attendanceTable.tableName,
-      description: 'Name of the DynamoDB attendance table',
-      exportName: 'SpecKitDevAttendanceTableName',
+    new cdk.CfnOutput(this, 'ClockTableName', {
+      value: clockTable.tableName,
+      description: 'Name of the DynamoDB clock table',
+      exportName: 'SpecKitDevClockTableName',
     });
 
-    new cdk.CfnOutput(this, 'AttendanceTableArn', {
-      value: attendanceTable.tableArn,
-      description: 'ARN of the DynamoDB attendance table',
-      exportName: 'SpecKitDevAttendanceTableArn',
-    });
-
-    new cdk.CfnOutput(this, 'LeaveRequestTableName', {
-      value: leaveRequestTable.tableName,
-      description: 'Name of the DynamoDB leave request table',
-      exportName: 'SpecKitDevLeaveRequestTableName',
-    });
-
-    new cdk.CfnOutput(this, 'LeaveRequestTableArn', {
-      value: leaveRequestTable.tableArn,
-      description: 'ARN of the DynamoDB leave request table',
-      exportName: 'SpecKitDevLeaveRequestTableArn',
+    new cdk.CfnOutput(this, 'ClockTableArn', {
+      value: clockTable.tableArn,
+      description: 'ARN of the DynamoDB clock table',
+      exportName: 'SpecKitDevClockTableArn',
     });
   }
 }

@@ -1,10 +1,10 @@
 # AWS DynamoDB Deployment with CDK
 
-このドキュメントでは、AWS CDKを使用してDynamoDBテーブルをデプロイする方法について説明します。
+このドキュメントでは、AWS CDKを使用して打刻テーブルをデプロイする方法について説明します。
 
 ## 概要
 
-勤怠管理システムのためのDynamoDBテーブルを、AWS CDKを使用してデプロイします。
+勤怠管理システムの打刻機能のために、DynamoDB clockテーブルをAWS CDKを使用してデプロイします。
 
 ## アーキテクチャ
 
@@ -18,15 +18,14 @@ GitHub Actions
 AWS CloudFormation
     ↓
 Amazon DynamoDB
-  - 出退勤記録テーブル
-  - 休暇申請テーブル
+  - Clock Table (打刻テーブル)
 ```
 
 ## DynamoDBテーブル設計
 
-### 1. 出退勤記録テーブル (`spec-kit-dev-attendance`)
+### Clock Table (`spec-kit-dev-clock`)
 
-**用途**: 従業員の出退勤記録を管理
+**用途**: 従業員の打刻（出退勤）記録を管理
 
 **キー構造**:
 - Partition Key: `userId` (String) - ユーザーID
@@ -36,6 +35,7 @@ Amazon DynamoDB
 - **DateIndex**
   - Partition Key: `date` (String) - 日付 (YYYY-MM-DD)
   - Sort Key: `timestamp` (String) - タイムスタンプ
+  - 用途: 特定日の全打刻記録を効率的に取得
 
 **属性例**:
 ```json
@@ -44,45 +44,21 @@ Amazon DynamoDB
   "timestamp": "2025-12-24T09:00:00Z",
   "date": "2025-12-24",
   "type": "clock-in",
-  "location": "Tokyo Office"
+  "location": "Tokyo Office",
+  "deviceId": "device-123"
 }
 ```
 
 **クエリパターン**:
-1. ユーザーごとの出退勤履歴取得
-2. 特定日の全従業員の出退勤記録取得
+1. ユーザーごとの打刻履歴取得: `userId` でクエリ
+2. 特定日の全打刻記録取得: DateIndex GSIで `date` でクエリ
+3. ユーザーの特定期間の打刻履歴: `userId` と `timestamp` の範囲指定
 
-### 2. 休暇申請テーブル (`spec-kit-dev-leave-requests`)
-
-**用途**: 休暇申請と承認状態を管理
-
-**キー構造**:
-- Partition Key: `requestId` (String) - 申請ID
-- Sort Key: `userId` (String) - ユーザーID
-
-**Global Secondary Index**:
-- **UserIndex**
-  - Partition Key: `userId` (String) - ユーザーID
-  - Sort Key: `status` (String) - ステータス (pending/approved/rejected)
-
-**属性例**:
-```json
-{
-  "requestId": "req-12345",
-  "userId": "user-001",
-  "status": "pending",
-  "startDate": "2025-12-25",
-  "endDate": "2025-12-27",
-  "leaveType": "annual",
-  "reason": "Family vacation",
-  "createdAt": "2025-12-24T10:00:00Z"
-}
-```
-
-**クエリパターン**:
-1. 申請IDによる詳細取得
-2. ユーザーごとの申請一覧取得
-3. ステータスによる申請フィルタリング
+**テーブル設定**:
+- 課金モード: On-Demand (PAY_PER_REQUEST)
+- Point-in-time Recovery: 有効
+- 暗号化: AWS管理キー
+- 削除ポリシー: RETAIN（誤削除防止）
 
 ## 前提条件
 

@@ -71,6 +71,5 @@ jobs:
           echo "🚀 Deployment completed successfully!"
           echo "📦 Stack: SpecKitDevStack"
           echo "🌏 Region: ${{ env.AWS_REGION }}"
-          echo "📋 DynamoDB tables deployed:"
-          echo "  - spec-kit-dev-attendance"
-          echo "  - spec-kit-dev-leave-requests"
+          echo "📋 DynamoDB table deployed:"
+          echo "  - spec-kit-dev-clock"

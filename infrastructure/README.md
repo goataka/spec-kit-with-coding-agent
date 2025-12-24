@@ -4,27 +4,19 @@
 
 ## 概要
 
-AWS CDKを使用してDynamoDBテーブルをデプロイします。
+AWS CDKを使用してDynamoDB clockテーブルをデプロイします。
 
 ## 構成
 
 ### DynamoDBテーブル
 
-1. **出退勤記録テーブル** (`spec-kit-dev-attendance`)
-   - Partition Key: `userId` (String)
-   - Sort Key: `timestamp` (String)
-   - GSI: `DateIndex` - 日付による検索用
-   - 課金モード: On-Demand (PAY_PER_REQUEST)
-   - Point-in-Time Recovery有効
-   - AWS管理の暗号化
-
-2. **休暇申請テーブル** (`spec-kit-dev-leave-requests`)
-   - Partition Key: `requestId` (String)
-   - Sort Key: `userId` (String)
-   - GSI: `UserIndex` - ユーザーとステータスによる検索用
-   - 課金モード: On-Demand (PAY_PER_REQUEST)
-   - Point-in-Time Recovery有効
-   - AWS管理の暗号化
+**Clock Table** (`spec-kit-dev-clock`)
+- Partition Key: `userId` (String)
+- Sort Key: `timestamp` (String)
+- GSI: `DateIndex` - 日付による検索用
+- 課金モード: On-Demand (PAY_PER_REQUEST)
+- Point-in-Time Recovery有効
+- AWS管理の暗号化
 
 ## セットアップ
 
@@ -106,10 +98,8 @@ npm run watch
 
 デプロイ後、以下の値が出力されます：
 
-- `AttendanceTableName`: 出退勤テーブル名
-- `AttendanceTableArn`: 出退勤テーブルARN
-- `LeaveRequestTableName`: 休暇申請テーブル名
-- `LeaveRequestTableArn`: 休暇申請テーブルARN
+- `ClockTableName`: 打刻テーブル名
+- `ClockTableArn`: 打刻テーブルARN
 
 ## 参考資料
 
