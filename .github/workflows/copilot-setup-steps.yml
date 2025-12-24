@@ -1,0 +1,56 @@
+name: "Copilot Setup Steps"
+
+# This workflow uses the devcontainer configuration for environment setup
+# See .devcontainer/devcontainer.json for the full setup details
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .devcontainer/devcontainer.json
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .devcontainer/devcontainer.json
+
+jobs:
+  copilot-setup-steps:
+    # Use the same Docker image as defined in devcontainer.json
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install Git
+        run: |
+          echo "Installing git (required by devcontainer features)..."
+          apt-get update && apt-get install -y git
+      
+      - name: Run devcontainer setup
+        run: |
+          echo "Running setup from devcontainer configuration..."
+          # Install spec-kit CLI (matching devcontainer postCreateCommand)
+          uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+          echo "Setup complete. spec-kit is ready to use."
+      
+      - name: Display environment
+        run: |
+          echo "🚀 Environment ready for spec-kit usage:"
+          echo "  ✓ Python $(python --version | cut -d' ' -f2)"
+          echo "  ✓ uv $(uv --version | cut -d' ' -f2)"
+          echo "  ✓ git $(git --version | cut -d' ' -f3)"
+          echo "  ✓ spec-kit CLI installed"
+          echo ""
+          echo "Available workflow commands:"
+          echo "  /constitution - プロジェクト憲法の作成・更新"
+          echo "  /specify      - 機能仕様の作成"
+          echo "  /plan         - 技術計画の作成"
+          echo "  /tasks        - 実装タスクの作成"
+          echo "  /implement    - タスクの実装"

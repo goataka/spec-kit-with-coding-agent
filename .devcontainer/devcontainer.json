@@ -1,0 +1,41 @@
+{
+  "name": "Spec-Kit Development Container",
+  "image": "ghcr.io/astral-sh/uv:python3.12-bookworm-slim",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  
+  "postCreateCommand": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git && echo 'Setup complete. spec-kit is ready to use.'",
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "GitHub.copilot",
+        "GitHub.copilot-chat"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:${containerEnv:HOME}/.local/bin"
+  },
+  
+  "mounts": [
+    "source=${localWorkspaceFolder}/.specify,target=${containerWorkspaceFolder}/.specify,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/memory,target=${containerWorkspaceFolder}/memory,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/specs,target=${containerWorkspaceFolder}/specs,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/docs,target=${containerWorkspaceFolder}/docs,type=bind,consistency=cached"
+  ],
+  
+  "forwardPorts": [],
+  
+  "postStartCommand": "echo '🚀 Spec-Kit Development Container is ready! Use spec-kit workflow commands: /constitution, /specify, /plan, /tasks, /implement'",
+  
+  "remoteUser": "root"
+}
