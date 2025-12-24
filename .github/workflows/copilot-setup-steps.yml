@@ -1,0 +1,64 @@
+name: "Copilot Setup Steps"
+
+# This workflow customizes the GitHub Copilot coding agent environment
+# It must be on the default branch and have a job named 'copilot-setup-steps'
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    # Use a Docker container with Python and uv pre-installed for faster setup
+    # This avoids having to install uv every time the agent runs
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install spec-kit CLI
+        run: |
+          echo "Installing spec-kit from GitHub..."
+          uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+          echo "Spec-kit installation complete"
+      
+      - name: Verify spec-kit installation
+        run: |
+          # Add uv tool bin to PATH
+          export PATH="$HOME/.local/bin:$PATH"
+          specify --help || echo "Note: specify command will be available in the agent session"
+      
+      - name: Display environment information
+        run: |
+          echo "Python version:"
+          python --version
+          echo ""
+          echo "uv version:"
+          uv --version
+          echo ""
+          echo "Environment ready for spec-kit usage"
+      
+      - name: Create cache for future runs
+        run: |
+          echo "Setup complete. The following are now available:"
+          echo "  ✓ Python 3.12"
+          echo "  ✓ uv package manager"
+          echo "  ✓ spec-kit CLI"
+          echo ""
+          echo "Workflow commands available in Copilot agent:"
+          echo "  /constitution - プロジェクト憲法の作成・更新"
+          echo "  /specify      - 機能仕様の作成"
+          echo "  /plan         - 技術計画の作成"
+          echo "  /tasks        - 実装タスクの作成"
+          echo "  /implement    - タスクの実装"

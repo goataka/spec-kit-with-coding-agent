@@ -28,13 +28,32 @@ This project is an attendance management system built using specification-driven
 
 このプロジェクトでは、GitHub Copilot Coding Agent経由でspec-kitを使用します。
 
-### Prerequisites / 前提条件
+### 自動セットアップ / Automatic Setup (推奨 / Recommended)
+
+**GitHub Copilot Coding Agentを使用する場合、セットアップは自動的に実行されます。**
+
+When using GitHub Copilot Coding Agent, setup is automatic.
+
+プロジェクトには `.github/workflows/copilot-setup-steps.yml` が含まれており、以下を自動的にセットアップします：
+- Python 3.12 with uv (pre-installed Docker image)
+- spec-kit CLI
+- 必要な依存関係
+
+このファイルにより、エージェントの起動時間が大幅に短縮されます。
+
+### 手動セットアップ / Manual Setup (ローカル開発用 / For Local Development)
+
+ローカル環境でspec-kitを使用する場合：
+
+For local development, manually install:
+
+#### Prerequisites / 前提条件
 
 - Python 3.11+
 - Git
 - uv (Python package manager)
 
-### Installation / インストール
+#### Installation / インストール
 
 ```bash
 # Install uv

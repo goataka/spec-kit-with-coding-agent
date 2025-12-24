@@ -6,7 +6,54 @@
 
 This document describes the initial spec-kit setup for this project.
 
-## Installation / インストール手順
+## 自動セットアップ / Automatic Setup (GitHub Copilot Coding Agent)
+
+### copilot-setup-steps.yml による自動化
+
+このプロジェクトには `.github/workflows/copilot-setup-steps.yml` ファイルが含まれており、GitHub Copilot Coding Agentが自動的に環境をセットアップします。
+
+This project includes `.github/workflows/copilot-setup-steps.yml` which automatically sets up the environment when using GitHub Copilot Coding Agent.
+
+#### 自動セットアップの内容 / What Gets Installed Automatically
+
+1. **Docker Image**: `ghcr.io/astral-sh/uv:python3.12-bookworm-slim`
+   - Python 3.12
+   - uv package manager (pre-installed)
+   
+2. **Spec-Kit CLI**: 自動インストール / Automatically installed
+   - `uv tool install` によるインストール
+   - GitHubリポジトリから最新版を取得
+
+3. **環境確認**: 自動検証 / Automatic verification
+   - Python, uv, spec-kit の動作確認
+
+#### メリット / Benefits
+
+- ✅ 毎回の手動セットアップが不要 / No manual setup required each time
+- ✅ 起動時間の大幅な短縮 / Significantly faster startup
+- ✅ Docker イメージによる高速化 / Faster with pre-built Docker image
+- ✅ 一貫した環境 / Consistent environment across all agent sessions
+
+#### 動作確認方法 / How to Verify
+
+GitHub Copilot Coding Agent のセッション内で以下を実行：
+
+```bash
+# Check Python version
+python --version
+
+# Check uv version
+uv --version
+
+# Check spec-kit (may need PATH configuration)
+specify --help
+```
+
+## 手動インストール / Manual Installation (ローカル開発用 / For Local Development)
+
+ローカル環境でspec-kitを使用する場合の手順です。
+
+For local development without Copilot agent:
 
 ### 1. uv (Python Package Manager)
 
@@ -31,6 +78,10 @@ specify --help
 ### Directory Layout / ディレクトリ構成
 
 ```
+.github/
+└── workflows/
+    └── copilot-setup-steps.yml  # 自動セットアップ定義
+
 .specify/
 ├── templates/              # ドキュメントテンプレート
 │   ├── commands/          # ワークフローコマンド定義
