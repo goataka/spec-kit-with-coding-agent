@@ -19,19 +19,15 @@ export class SpecKitDevStack extends cdk.Stack {
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      tags: [
-        {
-          key: 'Environment',
-          value: 'development',
-        },
-        {
-          key: 'Project',
-          value: 'spec-kit-attendance',
-        },
-      ],
     });
+
+    // Add tags to the attendance table
+    cdk.Tags.of(attendanceTable).add('Environment', 'development');
+    cdk.Tags.of(attendanceTable).add('Project', 'spec-kit-attendance');
 
     // Add GSI for querying by date
     attendanceTable.addGlobalSecondaryIndex({
@@ -59,19 +55,15 @@ export class SpecKitDevStack extends cdk.Stack {
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
-      pointInTimeRecovery: true,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
       encryption: dynamodb.TableEncryption.AWS_MANAGED,
-      tags: [
-        {
-          key: 'Environment',
-          value: 'development',
-        },
-        {
-          key: 'Project',
-          value: 'spec-kit-attendance',
-        },
-      ],
     });
+
+    // Add tags to the leave request table
+    cdk.Tags.of(leaveRequestTable).add('Environment', 'development');
+    cdk.Tags.of(leaveRequestTable).add('Project', 'spec-kit-attendance');
 
     // Add GSI for querying by user
     leaveRequestTable.addGlobalSecondaryIndex({
