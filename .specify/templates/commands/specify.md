@@ -1,152 +1,152 @@
 ---
-description: Create or update the feature specification from a natural language feature description.
+description: 自然言語の機能説明から機能仕様を作成または更新します。
 handoffs: 
-  - label: Build Technical Plan
+  - label: 技術計画を構築
     agent: speckit.plan
-    prompt: Create a plan for the spec. I am building with...
-  - label: Clarify Spec Requirements
+    prompt: 仕様の計画を作成します。私は以下で構築しています...
+  - label: 仕様要件を明確化
     agent: speckit.clarify
-    prompt: Clarify specification requirements
+    prompt: 仕様要件を明確化
     send: true
 scripts:
   sh: scripts/bash/create-new-feature.sh --json "{ARGS}"
   ps: scripts/powershell/create-new-feature.ps1 -Json "{ARGS}"
 ---
 
-## User Input
+## ユーザー入力
 
 ```text
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+空でない場合、続行する前にユーザー入力を **必ず** 考慮してください。
 
-## Outline
+## 概要
 
-The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `{ARGS}` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+トリガーメッセージで`/speckit.specify`の後にユーザーが入力したテキスト **が** 機能説明です。`{ARGS}`が文字通り下に表示されていても、この会話で常に利用可能であると仮定してください。空のコマンドを提供した場合を除き、ユーザーに繰り返しを求めないでください。
 
-Given that feature description, do this:
+その機能説明を考慮して、これを行います：
 
-1. **Generate a concise short name** (2-4 words) for the branch:
-   - Analyze the feature description and extract the most meaningful keywords
-   - Create a 2-4 word short name that captures the essence of the feature
-   - Use action-noun format when possible (e.g., "add-user-auth", "fix-payment-bug")
-   - Preserve technical terms and acronyms (OAuth2, API, JWT, etc.)
-   - Keep it concise but descriptive enough to understand the feature at a glance
-   - Examples:
-     - "I want to add user authentication" → "user-auth"
-     - "Implement OAuth2 integration for the API" → "oauth2-api-integration"
-     - "Create a dashboard for analytics" → "analytics-dashboard"
-     - "Fix payment processing timeout bug" → "fix-payment-timeout"
+1. **簡潔な短い名前を生成**（2-4語）ブランチ用：
+   - 機能説明を分析し、最も意味のあるキーワードを抽出
+   - 機能の本質を捉える2-4語の短い名前を作成
+   - 可能な場合はアクション-名詞形式を使用（例："add-user-auth"、"fix-payment-bug"）
+   - 技術用語と頭字語を保持（OAuth2、API、JWTなど）
+   - 一目で機能を理解できるほど簡潔だが説明的に保つ
+   - 例：
+     - "ユーザー認証を追加したい" → "user-auth"
+     - "APIのためのOAuth2統合を実装" → "oauth2-api-integration"
+     - "分析用のダッシュボードを作成" → "analytics-dashboard"
+     - "支払い処理タイムアウトのバグを修正" → "fix-payment-timeout"
 
-2. **Check for existing branches before creating new one**:
+2. **新しいブランチを作成する前に既存のブランチを確認**:
 
-   a. First, fetch all remote branches to ensure we have the latest information:
+   a. まず、最新情報を確保するためにすべてのリモートブランチをフェッチ：
 
       ```bash
       git fetch --all --prune
       ```
 
-   b. Find the highest feature number across all sources for the short-name:
-      - Remote branches: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+-<short-name>$'`
-      - Local branches: `git branch | grep -E '^[* ]*[0-9]+-<short-name>$'`
-      - Specs directories: Check for directories matching `specs/[0-9]+-<short-name>`
+   b. short-nameのすべてのソース全体で最も高い機能番号を見つける：
+      - リモートブランチ: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+-<short-name>$'`
+      - ローカルブランチ: `git branch | grep -E '^[* ]*[0-9]+-<short-name>$'`
+      - specsディレクトリ: `specs/[0-9]+-<short-name>`にマッチするディレクトリをチェック
 
-   c. Determine the next available number:
-      - Extract all numbers from all three sources
-      - Find the highest number N
-      - Use N+1 for the new branch number
+   c. 次に利用可能な番号を決定：
+      - 3つのソースすべてからすべての番号を抽出
+      - 最も高い番号Nを見つける
+      - 新しいブランチ番号にN+1を使用
 
-   d. Run the script `{SCRIPT}` with the calculated number and short-name:
-      - Pass `--number N+1` and `--short-name "your-short-name"` along with the feature description
-      - Bash example: `{SCRIPT} --json --number 5 --short-name "user-auth" "Add user authentication"`
-      - PowerShell example: `{SCRIPT} -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
+   d. 計算された番号とshort-nameでスクリプト`{SCRIPT}`を実行：
+      - 機能説明とともに`--number N+1`と`--short-name "your-short-name"`を渡す
+      - Bashの例: `{SCRIPT} --json --number 5 --short-name "user-auth" "ユーザー認証を追加"`
+      - PowerShellの例: `{SCRIPT} -Json -Number 5 -ShortName "user-auth" "ユーザー認証を追加"`
 
-   **IMPORTANT**:
-   - Check all three sources (remote branches, local branches, specs directories) to find the highest number
-   - Only match branches/directories with the exact short-name pattern
-   - If no existing branches/directories found with this short-name, start with number 1
-   - You must only ever run this script once per feature
-   - The JSON is provided in the terminal as output - always refer to it to get the actual content you're looking for
-   - The JSON output will contain BRANCH_NAME and SPEC_FILE paths
-   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot")
+   **重要**:
+   - 最も高い番号を見つけるために3つのソースすべて（リモートブランチ、ローカルブランチ、specsディレクトリ）をチェック
+   - 正確なshort-nameパターンのブランチ/ディレクトリのみをマッチ
+   - このshort-nameで既存のブランチ/ディレクトリが見つからない場合は、番号1から開始
+   - 機能ごとにこのスクリプトを一度だけ実行する必要があります
+   - JSONは出力としてターミナルで提供されます - 探している実際のコンテンツを取得するために常にそれを参照してください
+   - JSON出力にはBRANCH_NAMEとSPEC_FILEパスが含まれます
+   - 引数内のシングルクォート（例: "I'm Groot"）の場合、エスケープ構文を使用: 例 'I'\''m Groot' (または可能であれば二重引用符: "I'm Groot")
 
-3. Load `templates/spec-template.md` to understand required sections.
+3. 必要なセクションを理解するために`templates/spec-template.md`を読み込みます。
 
-4. Follow this execution flow:
+4. この実行フローに従います：
 
-    1. Parse user description from Input
-       If empty: ERROR "No feature description provided"
-    2. Extract key concepts from description
-       Identify: actors, actions, data, constraints
-    3. For unclear aspects:
-       - Make informed guesses based on context and industry standards
-       - Only mark with [NEEDS CLARIFICATION: specific question] if:
-         - The choice significantly impacts feature scope or user experience
-         - Multiple reasonable interpretations exist with different implications
-         - No reasonable default exists
-       - **LIMIT: Maximum 3 [NEEDS CLARIFICATION] markers total**
-       - Prioritize clarifications by impact: scope > security/privacy > user experience > technical details
-    4. Fill User Scenarios & Testing section
-       If no clear user flow: ERROR "Cannot determine user scenarios"
-    5. Generate Functional Requirements
-       Each requirement must be testable
-       Use reasonable defaults for unspecified details (document assumptions in Assumptions section)
-    6. Define Success Criteria
-       Create measurable, technology-agnostic outcomes
-       Include both quantitative metrics (time, performance, volume) and qualitative measures (user satisfaction, task completion)
-       Each criterion must be verifiable without implementation details
-    7. Identify Key Entities (if data involved)
-    8. Return: SUCCESS (spec ready for planning)
+    1. 入力からユーザー説明を解析
+       空の場合: ERROR "機能説明が提供されていません"
+    2. 説明から主要な概念を抽出
+       識別: アクター、アクション、データ、制約
+    3. 不明確な側面について：
+       - コンテキストと業界標準に基づいて情報に基づいた推測を行う
+       - 以下の場合のみ[NEEDS CLARIFICATION: 具体的な質問]でマーク：
+         - 選択が機能スコープまたはユーザーエクスペリエンスに大きく影響する
+         - 異なる意味を持つ複数の合理的な解釈が存在する
+         - 合理的なデフォルトが存在しない
+       - **制限: 最大3つの[NEEDS CLARIFICATION]マーカーの合計**
+       - 影響による明確化の優先順位付け: スコープ > セキュリティ/プライバシー > ユーザーエクスペリエンス > 技術的詳細
+    4. ユーザーシナリオとテストセクションを埋める
+       明確なユーザーフローがない場合: ERROR "ユーザーシナリオを決定できません"
+    5. 機能要件を生成
+       各要件はテスト可能である必要があります
+       未指定の詳細には合理的なデフォルトを使用（前提条件セクションに前提条件を文書化）
+    6. 成功基準を定義
+       測定可能で技術に依存しない結果を作成
+       定量的メトリクス（時間、パフォーマンス、ボリューム）と定性的測定値（ユーザー満足度、タスク完了）の両方を含む
+       各基準は実装の詳細なしで検証可能である必要があります
+    7. 主要なエンティティを特定（データが関与する場合）
+    8. 戻り値: SUCCESS（仕様は計画の準備ができています）
 
-5. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings.
+5. テンプレート構造を使用してSPEC_FILEに仕様を書き込み、セクションの順序と見出しを保持しながら、プレースホルダーを機能説明（引数）から派生した具体的な詳細で置き換えます。
 
-6. **Specification Quality Validation**: After writing the initial spec, validate it against quality criteria:
+6. **仕様品質検証**: 初期仕様を書いた後、品質基準に対して検証します：
 
-   a. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md` using the checklist template structure with these validation items:
+   a. **仕様品質チェックリストを作成**: チェックリストテンプレート構造を使用して、これらの検証項目を含む`FEATURE_DIR/checklists/requirements.md`にチェックリストファイルを生成：
 
       ```markdown
-      # Specification Quality Checklist: [FEATURE NAME]
+      # 仕様品質チェックリスト: [FEATURE NAME]
       
-      **Purpose**: Validate specification completeness and quality before proceeding to planning
-      **Created**: [DATE]
-      **Feature**: [Link to spec.md]
+      **目的**: 計画に進む前に仕様の完全性と品質を検証
+      **作成日**: [DATE]
+      **機能**: [spec.mdへのリンク]
       
-      ## Content Quality
+      ## コンテンツ品質
       
-      - [ ] No implementation details (languages, frameworks, APIs)
-      - [ ] Focused on user value and business needs
-      - [ ] Written for non-technical stakeholders
-      - [ ] All mandatory sections completed
+      - [ ] 実装の詳細なし（言語、フレームワーク、API）
+      - [ ] ユーザー価値とビジネスニーズに焦点を当てている
+      - [ ] 非技術的な利害関係者向けに書かれている
+      - [ ] すべての必須セクションが完了
       
-      ## Requirement Completeness
+      ## 要件の完全性
       
-      - [ ] No [NEEDS CLARIFICATION] markers remain
-      - [ ] Requirements are testable and unambiguous
-      - [ ] Success criteria are measurable
-      - [ ] Success criteria are technology-agnostic (no implementation details)
-      - [ ] All acceptance scenarios are defined
-      - [ ] Edge cases are identified
-      - [ ] Scope is clearly bounded
-      - [ ] Dependencies and assumptions identified
+      - [ ] [NEEDS CLARIFICATION]マーカーが残っていない
+      - [ ] 要件はテスト可能で曖昧さがない
+      - [ ] 成功基準は測定可能
+      - [ ] 成功基準は技術に依存しない（実装の詳細なし）
+      - [ ] すべての受け入れシナリオが定義されている
+      - [ ] エッジケースが識別されている
+      - [ ] スコープが明確に境界付けられている
+      - [ ] 依存関係と前提条件が識別されている
       
-      ## Feature Readiness
+      ## 機能の準備
       
-      - [ ] All functional requirements have clear acceptance criteria
-      - [ ] User scenarios cover primary flows
-      - [ ] Feature meets measurable outcomes defined in Success Criteria
-      - [ ] No implementation details leak into specification
+      - [ ] すべての機能要件に明確な受け入れ基準がある
+      - [ ] ユーザーシナリオは主要なフローをカバー
+      - [ ] 機能は成功基準で定義された測定可能な結果を満たす
+      - [ ] 実装の詳細が仕様に漏れていない
       
-      ## Notes
+      ## 注記
       
-      - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
+      - 不完全とマークされた項目は`/speckit.clarify`または`/speckit.plan`の前に仕様の更新が必要
       ```
 
-   b. **Run Validation Check**: Review the spec against each checklist item:
-      - For each item, determine if it passes or fails
-      - Document specific issues found (quote relevant spec sections)
+   b. **検証チェックを実行**: 各チェックリスト項目に対して仕様をレビュー：
+      - 各項目について、合格か不合格かを判断
+      - 発見された具体的な問題を文書化（関連する仕様セクションを引用）
 
-   c. **Handle Validation Results**:
+   c. **検証結果の処理**:
 
       - **If all items pass**: Mark checklist complete and proceed to step 6
 
@@ -193,69 +193,69 @@ Given that feature description, do this:
 
    d. **Update Checklist**: After each validation iteration, update the checklist file with current pass/fail status
 
-7. Report completion with branch name, spec file path, checklist results, and readiness for the next phase (`/speckit.clarify` or `/speckit.plan`).
+7. ブランチ名、仕様ファイルパス、チェックリスト結果、および次のフェーズ（`/speckit.clarify`または`/speckit.plan`）の準備状況とともに完了を報告します。
 
-**NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
+**注記:** スクリプトは書き込む前に新しいブランチを作成してチェックアウトし、仕様ファイルを初期化します。
 
-## General Guidelines
+## 一般的なガイドライン
 
-## Quick Guidelines
+## クイックガイドライン
 
-- Focus on **WHAT** users need and **WHY**.
-- Avoid HOW to implement (no tech stack, APIs, code structure).
-- Written for business stakeholders, not developers.
-- DO NOT create any checklists that are embedded in the spec. That will be a separate command.
+- ユーザーが必要とする**何を**と**なぜ**に焦点を当てる
+- 実装方法を避ける（技術スタック、API、コード構造なし）
+- 開発者ではなく、ビジネス利害関係者向けに書かれている
+- 仕様に埋め込まれたチェックリストを作成しないでください。それは別のコマンドになります
 
-### Section Requirements
+### セクション要件
 
-- **Mandatory sections**: Must be completed for every feature
-- **Optional sections**: Include only when relevant to the feature
-- When a section doesn't apply, remove it entirely (don't leave as "N/A")
+- **必須セクション**: すべての機能に対して完了する必要があります
+- **オプションセクション**: 機能に関連する場合にのみ含める
+- セクションが適用されない場合は、完全に削除します（"N/A"として残さない）
 
-### For AI Generation
+### AI生成用
 
-When creating this spec from a user prompt:
+ユーザープロンプトからこの仕様を作成する場合：
 
-1. **Make informed guesses**: Use context, industry standards, and common patterns to fill gaps
-2. **Document assumptions**: Record reasonable defaults in the Assumptions section
-3. **Limit clarifications**: Maximum 3 [NEEDS CLARIFICATION] markers - use only for critical decisions that:
-   - Significantly impact feature scope or user experience
-   - Have multiple reasonable interpretations with different implications
-   - Lack any reasonable default
-4. **Prioritize clarifications**: scope > security/privacy > user experience > technical details
-5. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
-6. **Common areas needing clarification** (only if no reasonable default exists):
-   - Feature scope and boundaries (include/exclude specific use cases)
-   - User types and permissions (if multiple conflicting interpretations possible)
-   - Security/compliance requirements (when legally/financially significant)
+1. **情報に基づいた推測を行う**: ギャップを埋めるためにコンテキスト、業界標準、一般的なパターンを使用
+2. **前提条件を文書化**: 前提条件セクションに合理的なデフォルトを記録
+3. **明確化を制限**: 最大3つの[NEEDS CLARIFICATION]マーカー - 以下のような重要な決定にのみ使用：
+   - 機能スコープまたはユーザーエクスペリエンスに大きく影響する
+   - 異なる意味を持つ複数の合理的な解釈がある
+   - 合理的なデフォルトが欠けている
+4. **明確化の優先順位付け**: スコープ > セキュリティ/プライバシー > ユーザーエクスペリエンス > 技術的詳細
+5. **テスターのように考える**: すべての曖昧な要件は"テスト可能で曖昧さがない"チェックリスト項目に失敗するべき
+6. **明確化が必要な一般的な領域**（合理的なデフォルトが存在しない場合のみ）:
+   - 機能スコープと境界（特定のユースケースを含む/除外する）
+   - ユーザータイプと権限（複数の矛盾する解釈が可能な場合）
+   - セキュリティ/コンプライアンス要件（法的/財政的に重要な場合）
 
-**Examples of reasonable defaults** (don't ask about these):
+**合理的なデフォルトの例**（これらについて尋ねないでください）:
 
-- Data retention: Industry-standard practices for the domain
-- Performance targets: Standard web/mobile app expectations unless specified
-- Error handling: User-friendly messages with appropriate fallbacks
-- Authentication method: Standard session-based or OAuth2 for web apps
-- Integration patterns: RESTful APIs unless specified otherwise
+- データ保持: ドメインの業界標準プラクティス
+- パフォーマンス目標: 指定されない限り、標準的なweb/モバイルアプリの期待値
+- エラー処理: 適切なフォールバックを伴うユーザーフレンドリーなメッセージ
+- 認証方法: webアプリの標準セッションベースまたはOAuth2
+- 統合パターン: 特に指定されない限りRESTful API
 
-### Success Criteria Guidelines
+### 成功基準ガイドライン
 
-Success criteria must be:
+成功基準は以下である必要があります：
 
-1. **Measurable**: Include specific metrics (time, percentage, count, rate)
-2. **Technology-agnostic**: No mention of frameworks, languages, databases, or tools
-3. **User-focused**: Describe outcomes from user/business perspective, not system internals
-4. **Verifiable**: Can be tested/validated without knowing implementation details
+1. **測定可能**: 特定のメトリクスを含む（時間、パーセンテージ、カウント、レート）
+2. **技術に依存しない**: フレームワーク、言語、データベース、ツールの言及なし
+3. **ユーザー中心**: システム内部ではなく、ユーザー/ビジネスの観点から結果を説明
+4. **検証可能**: 実装の詳細を知らなくてもテスト/検証可能
 
-**Good examples**:
+**良い例**:
 
-- "Users can complete checkout in under 3 minutes"
-- "System supports 10,000 concurrent users"
-- "95% of searches return results in under 1 second"
-- "Task completion rate improves by 40%"
+- "ユーザーは3分以内にチェックアウトを完了できる"
+- "システムは10,000の同時ユーザーをサポート"
+- "検索の95%が1秒以内に結果を返す"
+- "タスク完了率が40%向上"
 
-**Bad examples** (implementation-focused):
+**悪い例**（実装に焦点を当てている）:
 
-- "API response time is under 200ms" (too technical, use "Users see results instantly")
-- "Database can handle 1000 TPS" (implementation detail, use user-facing metric)
-- "React components render efficiently" (framework-specific)
-- "Redis cache hit rate above 80%" (technology-specific)
+- "APIレスポンスタイムが200ms未満"（技術的すぎる、"ユーザーは即座に結果を見る"を使用）
+- "データベースは1000 TPSを処理できる"（実装の詳細、ユーザー向けメトリクスを使用）
+- "Reactコンポーネントが効率的にレンダリング"（フレームワーク固有）
+- "Redisキャッシュヒット率が80%以上"（技術固有）
