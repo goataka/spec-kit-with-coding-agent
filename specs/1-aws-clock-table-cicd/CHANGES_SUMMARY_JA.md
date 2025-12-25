@@ -67,24 +67,29 @@
 
 ### 新規作成したファイル
 
-4. **OIDC_MIGRATION_GUIDE.md** (9.3KB)
-   - フェーズ1: 手動セットアップ
-   - フェーズ2: CDKデプロイとOIDC移行
-   - フェーズ3: 手動設定の削除
-   - トラブルシューティング
-   - AWS CLIコマンド集
+4. **bootstrap-oidc.yaml** (4KB)
+   - 初回OIDC/IAMロールセットアップ用CloudFormationテンプレート
+   - パラメータ化されたGitHubリポジトリ設定
+   - 自動的な出力値設定
 
-5. **COST_OPTIMIZATION.md** (9.3KB)
+5. **OIDC_MIGRATION_GUIDE.md** (更新: 10KB)
+   - フェーズ1: CloudFormationでのセットアップ（推奨）
+   - フェーズ2: CDKデプロイとOIDC移行
+   - フェーズ3: CloudFormationスタック削除
+   - トラブルシューティング
+   - AWS CLIとマネジメントコンソール両対応
+
+6. **COST_OPTIMIZATION.md** (9.3KB)
    - コスト削減の方針
    - 除外した機能の詳細
    - 環境別コスト見積もり
    - 将来の拡張計画
    - ベストプラクティス
 
-6. **README.md** (6.6KB)
+7. **README.md** (更新: 7KB)
    - ドキュメント一覧
    - 主要な変更点のサマリー
-   - 実装の流れ
+   - 実装の流れ（CloudFormation使用）
    - 技術スタック
    - 成功指標
 
@@ -92,16 +97,21 @@
 
 ### OIDC管理フロー
 
-#### フェーズ1: 初回手動セットアップ
+#### フェーズ1: CloudFormationでのセットアップ（推奨）
 ```bash
-# 1. OIDCプロバイダー作成
-aws iam create-open-id-connect-provider ...
+# 1. CloudFormationテンプレートをデプロイ
+aws cloudformation create-stack \
+  --stack-name spec-kit-github-oidc-bootstrap \
+  --template-body file://bootstrap-oidc.yaml \
+  --capabilities CAPABILITY_NAMED_IAM
 
-# 2. IAMロール作成
-aws iam create-role --role-name GitHubActionsDeployRole-Initial ...
+# 2. ロールARNを取得
+aws cloudformation describe-stacks \
+  --stack-name spec-kit-github-oidc-bootstrap \
+  --query 'Stacks[0].Outputs[?OutputKey==`GitHubSecretValue`].OutputValue'
 
 # 3. GitHub Secretsに設定
-AWS_ROLE_TO_ASSUME = arn:aws:iam::xxx:role/GitHubActionsDeployRole-Initial
+AWS_ROLE_TO_ASSUME = <CloudFormation出力値>
 ```
 
 #### フェーズ2: CDKデプロイとOIDC移行
@@ -113,11 +123,21 @@ cdk deploy
 AWS_ROLE_TO_ASSUME = arn:aws:iam::xxx:role/GitHubActionsDeployRole-dev
 ```
 
-#### フェーズ3: 手動設定の削除
+#### フェーズ3: ブートストラップリソースの削除
 ```bash
-# 6. 手動作成したリソースを削除
-aws iam delete-role --role-name GitHubActionsDeployRole-Initial
+# 6. CloudFormationスタックを削除（全リソースが自動削除）
+aws cloudformation delete-stack \
+  --stack-name spec-kit-github-oidc-bootstrap
 ```
+
+### CloudFormationテンプレートの追加
+
+`bootstrap-oidc.yaml` ファイルを追加:
+- OIDCプロバイダーの自動作成
+- IAMロールの自動作成（PowerUserAccess + IAM権限）
+- パラメータ化（GitHubOrg、GitHubRepo、RoleName）
+- 出力値の自動設定（ロールARN、OIDC ARN）
+- タグによる管理（Purpose: Initial Bootstrap）
 
 ### CDKスタックの変更
 

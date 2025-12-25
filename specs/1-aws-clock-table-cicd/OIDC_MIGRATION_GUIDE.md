@@ -6,11 +6,76 @@
 
 ## 移行の流れ
 
-### フェーズ1: 初回手動セットアップ（ブートストラップ）
+### フェーズ1: 初回セットアップ（ブートストラップ）
 
-初回のみ、AWSリソースをデプロイするために必要な最小限の権限を持つOIDCプロバイダーとIAMロールを手動で作成します。
+初回のみ、AWSリソースをデプロイするために必要な最小限の権限を持つOIDCプロバイダーとIAMロールを作成します。
 
-#### 1.1 OIDCプロバイダーの作成
+**推奨方法: CloudFormationテンプレートを使用**
+
+#### 1.1 CloudFormationテンプレートでのセットアップ（推奨）
+
+CloudFormationテンプレート `bootstrap-oidc.yaml` を使用することで、手動コマンドなしで簡単にセットアップできます。
+
+**方法1: AWSコンソールからデプロイ**
+
+1. AWSマネジメントコンソールにログイン
+2. CloudFormationサービスを開く
+3. 「スタックの作成」→「新しいリソースを使用（標準）」を選択
+4. テンプレートファイル `bootstrap-oidc.yaml` をアップロード
+5. スタック名を入力（例: `spec-kit-github-oidc-bootstrap`）
+6. パラメータを確認（必要に応じて変更）:
+   - `GitHubOrg`: goataka（デフォルト）
+   - `GitHubRepo`: spec-kit-with-coding-agent（デフォルト）
+   - `RoleName`: GitHubActionsDeployRole-Initial（デフォルト）
+7. IAMリソース作成の確認にチェックを入れる
+8. スタックを作成
+
+**方法2: AWS CLIからデプロイ**
+
+```bash
+# CloudFormationスタックを作成
+aws cloudformation create-stack \
+  --stack-name spec-kit-github-oidc-bootstrap \
+  --template-body file://bootstrap-oidc.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameters \
+    ParameterKey=GitHubOrg,ParameterValue=goataka \
+    ParameterKey=GitHubRepo,ParameterValue=spec-kit-with-coding-agent \
+    ParameterKey=RoleName,ParameterValue=GitHubActionsDeployRole-Initial
+
+# デプロイ完了を待機
+aws cloudformation wait stack-create-complete \
+  --stack-name spec-kit-github-oidc-bootstrap
+
+# 出力値を確認
+aws cloudformation describe-stacks \
+  --stack-name spec-kit-github-oidc-bootstrap \
+  --query 'Stacks[0].Outputs' \
+  --output table
+```
+
+**出力例:**
+```
+--------------------------------------------------------------------
+|                        DescribeStacks                            |
++----------------------+-------------------------------------------+
+| Description          | Value                                     |
++----------------------+-------------------------------------------+
+| OIDCProviderArn      | arn:aws:iam::123456789012:oidc-provider/...|
+| RoleArn              | arn:aws:iam::123456789012:role/GitHubActi...|
+| RoleName             | GitHubActionsDeployRole-Initial           |
+| GitHubSecretValue    | arn:aws:iam::123456789012:role/GitHubActi...|
++----------------------+-------------------------------------------+
+```
+
+#### 1.2 代替方法: AWS CLIでの手動セットアップ
+
+CloudFormationが使用できない場合は、以下のAWS CLIコマンドで手動セットアップも可能です。
+
+<details>
+<summary>手動セットアップ手順（クリックして展開）</summary>
+
+**OIDCプロバイダーの作成:**
 
 ```bash
 aws iam create-open-id-connect-provider \
@@ -19,16 +84,9 @@ aws iam create-open-id-connect-provider \
   --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
 ```
 
-**出力例:**
-```json
-{
-    "OpenIDConnectProviderArn": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
-}
-```
+**IAMロールの作成:**
 
-#### 1.2 IAMロールの作成
-
-**Trust Policy (trust-policy.json):**
+Trust Policy（trust-policy.json）:
 ```json
 {
   "Version": "2012-10-17",
@@ -52,9 +110,8 @@ aws iam create-open-id-connect-provider \
 }
 ```
 
-**ロール作成コマンド:**
 ```bash
-# Trust Policyでロールを作成
+# ロール作成
 aws iam create-role \
   --role-name GitHubActionsDeployRole-Initial \
   --assume-role-policy-document file://trust-policy.json \
@@ -65,7 +122,7 @@ aws iam attach-role-policy \
   --role-name GitHubActionsDeployRole-Initial \
   --policy-arn arn:aws:iam::aws:policy/PowerUserAccess
 
-# IAM権限を追加（CDKがOIDCとロールを管理できるようにする）
+# IAM権限を追加
 cat > iam-policy.json << 'EOF'
 {
   "Version": "2012-10-17",
@@ -99,12 +156,24 @@ aws iam put-role-policy \
   --policy-document file://iam-policy.json
 ```
 
+</details>
+
 #### 1.3 GitHub Secretsの設定
+
+CloudFormation出力の `GitHubSecretValue` または `RoleArn` の値を使用して、GitHub Secretsを設定します。
 
 GitHub リポジトリの Settings > Secrets and variables > Actions で以下を設定:
 
 - **Name**: `AWS_ROLE_TO_ASSUME`
-- **Value**: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Initial`
+- **Value**: CloudFormationスタックの出力値 `GitHubSecretValue`（例: `arn:aws:iam::123456789012:role/GitHubActionsDeployRole-Initial`）
+
+**AWS CLIで値を取得:**
+```bash
+aws cloudformation describe-stacks \
+  --stack-name spec-kit-github-oidc-bootstrap \
+  --query 'Stacks[0].Outputs[?OutputKey==`GitHubSecretValue`].OutputValue' \
+  --output text
+```
 
 ### フェーズ2: CDKデプロイとOIDC管理の移行
 
@@ -158,11 +227,39 @@ aws cloudformation describe-stacks \
 # ワークフローが成功すれば、CDK管理のOIDCが正常に動作している
 ```
 
-### フェーズ3: 手動設定の削除
+### フェーズ3: ブートストラップリソースの削除
 
-CDK管理のOIDCが正常に動作することを確認したら、手動で作成したリソースを削除します。
+CDK管理のOIDCが正常に動作することを確認したら、初回ブートストラップ用のCloudFormationスタックを削除します。
 
-#### 3.1 手動作成したIAMロールの削除
+#### 3.1 CloudFormationスタックの削除（推奨）
+
+CloudFormationで作成した場合は、スタックを削除するだけで全てのリソースが自動的に削除されます。
+
+**方法1: AWSコンソールから削除**
+
+1. CloudFormationコンソールを開く
+2. `spec-kit-github-oidc-bootstrap` スタックを選択
+3. 「削除」をクリック
+4. 削除を確認
+
+**方法2: AWS CLIから削除**
+
+```bash
+# スタックを削除
+aws cloudformation delete-stack \
+  --stack-name spec-kit-github-oidc-bootstrap
+
+# 削除完了を待機
+aws cloudformation wait stack-delete-complete \
+  --stack-name spec-kit-github-oidc-bootstrap
+```
+
+#### 3.2 代替方法: 手動削除（CloudFormation未使用の場合のみ）
+
+手動でAWS CLIで作成した場合は、以下のコマンドで削除します。
+
+<details>
+<summary>手動削除手順（クリックして展開）</summary>
 
 ```bash
 # アタッチされたポリシーを確認
@@ -182,33 +279,20 @@ aws iam delete-role-policy \
 # ロールを削除
 aws iam delete-role \
   --role-name GitHubActionsDeployRole-Initial
-```
 
-#### 3.2 手動作成したOIDCプロバイダーの削除
-
-**重要**: CDK管理のOIDCプロバイダーが存在することを確認してから実行してください。
-
-```bash
-# CDK管理のOIDCプロバイダーが存在することを確認
-aws iam get-open-id-connect-provider \
-  --open-id-connect-provider-arn <CDK管理のOIDC ARN>
-
-# 確認できたら、手動作成したOIDCプロバイダーを削除
-# 注意: 手動作成時のARNを使用してください（CDK管理版ではない）
+# OIDCプロバイダーを削除（手動作成した場合のみ）
+# 注意: CDK管理のOIDCプロバイダーは削除しないこと
 aws iam delete-open-id-connect-provider \
   --open-id-connect-provider-arn <手動作成したOIDC ARN>
 ```
 
-**注意**: 
-- 同じURLのOIDCプロバイダーは1つのAWSアカウントに1つしか作成できません
-- 手動作成版とCDK管理版は同じARNになるため、実際には手動作成版をCDKでインポートする形になります
-- CloudFormationがOIDCプロバイダーを管理するようになるため、手動削除は不要な場合があります
+</details>
 
 #### 3.3 最終確認
 
 ```bash
-# 手動作成したリソースが削除されたことを確認
-aws iam get-role --role-name GitHubActionsDeployRole-Initial
+# ブートストラップリソースが削除されたことを確認
+aws iam get-role --role-name GitHubActionsDeployRole-Initial 2>&1
 # エラー: NoSuchEntity が表示されればOK
 
 # CDK管理のリソースが正常に存在することを確認

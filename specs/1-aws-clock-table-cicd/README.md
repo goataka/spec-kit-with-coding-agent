@@ -76,25 +76,24 @@
 
 ## 🚀 実装の流れ
 
-### フェーズ1: 初回セットアップ（手動）
+### フェーズ1: 初回セットアップ（CloudFormation推奨）
 
-1. AWS OIDCプロバイダーを手動作成
-2. IAMロールを手動作成（PowerUserAccess + IAM権限）
+1. CloudFormationテンプレート `bootstrap-oidc.yaml` でOIDCとIAMロールを作成
+2. CloudFormation出力からロールARNを取得
 3. GitHub Secretsに`AWS_ROLE_TO_ASSUME`を設定
 4. CDK Bootstrapを実行
 
 ### フェーズ2: CDKデプロイとOIDC移行
 
 5. CDKスタックをデプロイ（OIDC + IAMロール + DynamoDB）
-6. CloudFormation出力から新しいロールARNを取得
+6. CDKスタックのCloudFormation出力から新しいロールARNを取得
 7. GitHub Secretsを更新（CDK管理のロールARNに変更）
 8. 動作確認
 
 ### フェーズ3: クリーンアップ
 
-9. 手動作成したIAMロールを削除
-10. 手動作成したOIDCプロバイダーを削除（必要に応じて）
-11. 最終動作確認
+9. ブートストラップ用のCloudFormationスタックを削除
+10. 最終動作確認
 
 ## 📊 技術スタック
 

@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Initial OIDC Provider and IAM Role for GitHub Actions Bootstrap (spec-kit)'
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Default: 'goataka'
+    Description: 'GitHub organization or user name'
+  
+  GitHubRepo:
+    Type: String
+    Default: 'spec-kit-with-coding-agent'
+    Description: 'GitHub repository name'
+  
+  RoleName:
+    Type: String
+    Default: 'GitHubActionsDeployRole-Initial'
+    Description: 'Name of the IAM role for GitHub Actions'
+
+Resources:
+  # GitHub OIDC Provider
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+      Tags:
+        - Key: Name
+          Value: GitHub Actions OIDC Provider
+        - Key: Purpose
+          Value: Initial Bootstrap
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  # IAM Role for GitHub Actions
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      Description: 'Initial role for GitHub Actions to bootstrap CDK (temporary)'
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !GetAtt GitHubOIDCProvider.Arn
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOrg}/${GitHubRepo}:*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/PowerUserAccess
+      Policies:
+        - PolicyName: CDKIAMPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRole
+                  - iam:PassRole
+                  - iam:CreateOpenIDConnectProvider
+                  - iam:DeleteOpenIDConnectProvider
+                  - iam:GetOpenIDConnectProvider
+                  - iam:TagOpenIDConnectProvider
+                  - iam:UpdateOpenIDConnectProviderThumbprint
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Ref RoleName
+        - Key: Purpose
+          Value: Initial Bootstrap
+        - Key: ManagedBy
+          Value: CloudFormation
+        - Key: DeleteAfter
+          Value: CDK Migration Complete
+
+Outputs:
+  OIDCProviderArn:
+    Description: ARN of the GitHub OIDC Provider
+    Value: !GetAtt GitHubOIDCProvider.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-OIDCProviderArn'
+  
+  RoleArn:
+    Description: ARN of the GitHub Actions IAM Role
+    Value: !GetAtt GitHubActionsRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleArn'
+  
+  RoleName:
+    Description: Name of the GitHub Actions IAM Role
+    Value: !Ref GitHubActionsRole
+    Export:
+      Name: !Sub '${AWS::StackName}-RoleName'
+  
+  GitHubSecretValue:
+    Description: Value to use for AWS_ROLE_TO_ASSUME in GitHub Secrets
+    Value: !GetAtt GitHubActionsRole.Arn
+  
+  NextSteps:
+    Description: Next steps after deploying this stack
+    Value: |
+      1. Copy the RoleArn output value
+      2. Set it as AWS_ROLE_TO_ASSUME in GitHub repository secrets
+      3. Deploy the CDK stack via GitHub Actions
+      4. After CDK deployment succeeds, delete this CloudFormation stack
