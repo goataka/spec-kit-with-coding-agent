@@ -41,121 +41,70 @@
 
 ### 2.1 システム構成図
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        GitHub Repository                     │
-│  ┌────────────────────┐    ┌──────────────────────────┐    │
-│  │  infrastructure/   │    │ .github/workflows/       │    │
-│  │  ├─ bin/app.ts    │    │ ├─ deploy-dev-to-aws.yml│    │
-│  │  ├─ lib/stack.ts  │    │ ├─ cdk-bootstrap.yml     │    │
-│  │  └─ cdk.json      │    │ └─ cdk-synth.yml         │    │
-│  └────────────────────┘    └──────────────────────────┘    │
-└──────────────┬──────────────────────────┬───────────────────┘
-               │                          │
-               │ Git Push (main)          │ Manual Trigger
-               │ or Manual Trigger        │
-               ▼                          ▼
-┌──────────────────────────────────────────────────────────────┐
-│                      GitHub Actions                          │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  1. Checkout code                                       │ │
-│  │  2. Setup Node.js 22                                    │ │
-│  │  3. Install dependencies (npm ci)                       │ │
-│  │  4. Build TypeScript (npm run build)                    │ │
-│  │  5. Authenticate via OIDC                               │ │
-│  │  6. Execute CDK command                                 │ │
-│  │     - deploy: cdk deploy                                │ │
-│  │     - bootstrap: cdk bootstrap                          │ │
-│  │     - synth: cdk synth                                  │ │
-│  └────────────────────────────────────────────────────────┘ │
-└───────────────────────────┬──────────────────────────────────┘
-                            │ OIDC Authentication
-                            │ (No stored credentials)
-                            ▼
-┌──────────────────────────────────────────────────────────────┐
-│                          AWS Account                         │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  IAM OIDC Provider                                    │  │
-│  │  ├─ Provider: token.actions.githubusercontent.com     │  │
-│  │  ├─ Audience: sts.amazonaws.com                       │  │
-│  │  └─ Role: GitHubActionsDeployRole                     │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                            │                                 │
-│                            ▼                                 │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  CloudFormation Stack: SpecKitDevStack                │  │
-│  │  ├─ DynamoDB Table: spec-kit-dev-clock                │  │
-│  │  │  ├─ Partition Key: userId (String)                 │  │
-│  │  │  ├─ Sort Key: timestamp (String)                   │  │
-│  │  │  ├─ GSI: DateIndex (date, timestamp)               │  │
-│  │  │  ├─ Billing: PAY_PER_REQUEST                       │  │
-│  │  │  ├─ PITR: Enabled                                  │  │
-│  │  │  └─ Encryption: AWS Managed                        │  │
-│  │  └─ Outputs: TableName, TableArn                      │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  CloudFormation Stack: CDKToolkit (bootstrap)         │  │
-│  │  ├─ S3 Bucket: Asset storage                          │  │
-│  │  ├─ ECR Repository: Docker images (if needed)         │  │
-│  │  └─ IAM Roles: Deployment roles                       │  │
-│  └──────────────────────────────────────────────────────┘  │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph GitHub["GitHub Repository"]
+        infra["infrastructure/<br/>├─ bin/app.ts<br/>├─ lib/stack.ts<br/>└─ cdk.json"]
+        workflows[".github/workflows/<br/>├─ deploy-dev-to-aws.yml<br/>├─ cdk-bootstrap.yml<br/>└─ cdk-synth.yml"]
+    end
+    
+    subgraph Actions["GitHub Actions"]
+        steps["1. Checkout code<br/>2. Setup Node.js 22<br/>3. Install dependencies<br/>4. Build TypeScript<br/>5. Authenticate via OIDC<br/>6. Execute CDK command<br/>&nbsp;&nbsp;&nbsp;- deploy: cdk deploy<br/>&nbsp;&nbsp;&nbsp;- bootstrap: cdk bootstrap<br/>&nbsp;&nbsp;&nbsp;- synth: cdk synth"]
+    end
+    
+    subgraph AWS["AWS Account"]
+        oidc["IAM OIDC Provider<br/>Provider: token.actions.githubusercontent.com<br/>Audience: sts.amazonaws.com<br/>Role: GitHubActionsDeployRole"]
+        
+        subgraph Stack1["CloudFormation Stack: SpecKitDevStack"]
+            dynamo["DynamoDB Table: spec-kit-dev-clock<br/>├─ Partition Key: userId<br/>├─ Sort Key: timestamp<br/>├─ GSI: DateIndex<br/>├─ Billing: PAY_PER_REQUEST<br/>├─ PITR: Enabled<br/>└─ Encryption: AWS Managed<br/>Outputs: TableName, TableArn"]
+        end
+        
+        subgraph Stack2["CloudFormation Stack: CDKToolkit"]
+            toolkit["├─ S3 Bucket: Asset storage<br/>├─ ECR Repository<br/>└─ IAM Roles: Deployment roles"]
+        end
+    end
+    
+    infra -->|Git Push to main<br/>or Manual Trigger| Actions
+    workflows -->|Manual Trigger| Actions
+    Actions -->|OIDC Authentication<br/>No stored credentials| oidc
+    oidc --> Stack1
+    oidc --> Stack2
 ```
 
 ### 2.2 デプロイメントフロー
 
 #### 自動デプロイ (deploy-dev-to-aws.yml)
-```
-infrastructure/ 変更検知
-  ↓
-GitHub Actions トリガー
-  ↓
-**Node.js セットアップ (v22)**
-  ↓
-依存関係インストール
-  ↓
-TypeScript ビルド
-  ↓
-OIDC認証 (一時認証情報取得)
-  ↓
-CDK Synth (CloudFormation生成)
-  ↓
-CDK Deploy (--require-approval broadening)
-  ↓
-CloudFormation スタック更新
-  ↓
-DynamoDB テーブル作成/更新
-  ↓
-出力: TableName, TableArn
+```mermaid
+flowchart TD
+    A[infrastructure/ 変更検知] --> B[GitHub Actions トリガー]
+    B --> C[Node.js セットアップ v22]
+    C --> D[依存関係インストール]
+    D --> E[TypeScript ビルド]
+    E --> F[OIDC認証<br/>一時認証情報取得]
+    F --> G[CDK Synth<br/>CloudFormation生成]
+    G --> H[CDK Deploy<br/>--require-approval broadening]
+    H --> I[CloudFormation スタック更新]
+    I --> J[DynamoDB テーブル作成/更新]
+    J --> K[出力: TableName, TableArn]
 ```
 
 #### 手動Bootstrap (cdk-bootstrap.yml)
-```
-手動トリガー (環境・リージョン指定)
-  ↓
-OIDC認証
-  ↓
-cdk bootstrap aws://{ACCOUNT}/{REGION}
-  ↓
-CDKToolkit スタック作成
-  ↓
-S3バケット・IAMロール準備完了
+```mermaid
+flowchart TD
+    A[手動トリガー<br/>環境・リージョン指定] --> B[OIDC認証]
+    B --> C[cdk bootstrap<br/>aws://{ACCOUNT}/{REGION}]
+    C --> D[CDKToolkit スタック作成]
+    D --> E[S3バケット・IAMロール<br/>準備完了]
 ```
 
 #### 手動Synth (cdk-synth.yml)
-```
-手動トリガー (環境指定)
-  ↓
-TypeScript ビルド
-  ↓
-cdk synth
-  ↓
-CloudFormation テンプレート生成
-  ↓
-成果物アップロード (JSON)
-  ↓
-手動ダウンロード可能
+```mermaid
+flowchart TD
+    A[手動トリガー<br/>環境指定] --> B[TypeScript ビルド]
+    B --> C[cdk synth]
+    C --> D[CloudFormation<br/>テンプレート生成]
+    D --> E[成果物アップロード<br/>JSON]
+    E --> F[手動ダウンロード可能]
 ```
 
 ## 3. CDKスタック構造
