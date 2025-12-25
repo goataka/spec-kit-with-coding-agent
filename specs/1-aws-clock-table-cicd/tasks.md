@@ -58,15 +58,15 @@
 - [ ] スタックにDynamoDB Tableコンストラクトを追加
 - [ ] テーブル名を設定: `spec-kit-${environment}-clock`
 - [ ] パーティションキーを設定: `userId` (String)
-- [ ] ソートキーを設定: `timestamp` (Number)
+- [ ] ソートキーを設定: `timestamp` (String, ISO 8601形式)
 - [ ] 課金モードを設定: `PAY_PER_REQUEST`
 - [ ] ポイントインタイムリカバリを有効化
 - [ ] 削除ポリシーを設定: `RETAIN`
 - [ ] サーバーサイド暗号化を追加（AWS管理）
 - [ ] Global Secondary Index (GSI) を作成:
   - 名前: `DateIndex`
-  - パーティションキー: `date` (String)
-  - ソートキー: `timestamp` (Number)
+  - パーティションキー: `date` (String, ISO 8601形式)
+  - ソートキー: `timestamp` (String, ISO 8601形式)
   - プロジェクション: `ALL`
 
 **受入条件**:
@@ -136,7 +136,7 @@
 - [ ] Node.js 22環境をセットアップ
 - [ ] CDK依存関係をインストール: `npm ci`
 - [ ] CDK synthを実行: `cdk synth --context environment=$ENVIRONMENT`
-- [ ] CloudFormationテンプレートをアーティファクトとしてアップロード（保持期間: 90日）
+- [ ] CloudFormationテンプレートをアーティファクトとしてアップロード（保持期間: 30日）
 - [ ] ダウンロード手順付きのワークフローサマリーを追加
 
 **受入条件**:

@@ -504,16 +504,82 @@ aws iam create-open-id-connect-provider \
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "AllowCloudFormationForProjectStacks",
       "Effect": "Allow",
       "Action": [
-        "cloudformation:*",
-        "dynamodb:*",
-        "s3:*",
-        "iam:GetRole",
-        "iam:PassRole",
-        "sts:GetCallerIdentity"
+        "cloudformation:CreateStack",
+        "cloudformation:UpdateStack",
+        "cloudformation:DeleteStack",
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:GetTemplate",
+        "cloudformation:ValidateTemplate",
+        "cloudformation:ListStacks"
       ],
+      "Resource": [
+        "arn:aws:cloudformation:*:*:stack/spec-kit-*",
+        "arn:aws:cloudformation:*:*:stack/CDKToolkit/*"
+      ]
+    },
+    {
+      "Sid": "AllowDynamoDBForClockTable",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:CreateTable",
+        "dynamodb:UpdateTable",
+        "dynamodb:DeleteTable",
+        "dynamodb:DescribeTable",
+        "dynamodb:DescribeContinuousBackups",
+        "dynamodb:UpdateContinuousBackups",
+        "dynamodb:DescribeTimeToLive",
+        "dynamodb:UpdateTimeToLive",
+        "dynamodb:ListTagsOfResource",
+        "dynamodb:TagResource",
+        "dynamodb:UntagResource"
+      ],
+      "Resource": "arn:aws:dynamodb:*:*:table/spec-kit-*-clock"
+    },
+    {
+      "Sid": "AllowS3ForCdkBootstrapBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy"
+      ],
+      "Resource": [
+        "arn:aws:s3:::cdk-*-assets-*",
+        "arn:aws:s3:::cdk-*-assets-*/*"
+      ]
+    },
+    {
+      "Sid": "AllowPassCdkRolesToCloudFormation",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/cdk-*-cfn-exec-role-*",
+        "arn:aws:iam::*:role/cdk-*-deploy-role-*"
+      ]
+    },
+    {
+      "Sid": "AllowSTSForIdentity",
+      "Effect": "Allow",
+      "Action": "sts:GetCallerIdentity",
       "Resource": "*"
+    },
+    {
+      "Sid": "AllowSSMForCdkBootstrap",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter"
+      ],
+      "Resource": "arn:aws:ssm:*:*:parameter/cdk-bootstrap/*"
     }
   ]
 }

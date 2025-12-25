@@ -102,8 +102,8 @@
 ### 機能要件
 
 - **FR-001**: システムはAWS CDKを使用してDynamoDBテーブル "spec-kit-dev-clock" をデプロイできなければならない
-- **FR-002**: テーブルはPartition Key "userId" (String) とSort Key "timestamp" (String) を持たなければならない
-- **FR-003**: テーブルはGlobal Secondary Index "DateIndex" を持ち、Partition Key "date" (String) とSort Key "timestamp" (String) でクエリ可能でなければならない
+- **FR-002**: テーブルはPartition Key "userId" (String) とSort Key "timestamp" (String, ISO 8601形式の日時文字列) を持たなければならない
+- **FR-003**: テーブルはGlobal Secondary Index "DateIndex" を持ち、Partition Key "date" (String, ISO 8601形式の日付文字列) とSort Key "timestamp" (String, ISO 8601形式の日時文字列) でクエリ可能でなければならない
 - **FR-004**: テーブルはOn-Demand課金モード (PAY_PER_REQUEST) で作成されなければならない
 - **FR-005**: テーブルはPoint-in-Time Recovery (PITR) が有効化されていなければならない
 - **FR-006**: テーブルはAWS管理キーによる暗号化が設定されていなければならない
