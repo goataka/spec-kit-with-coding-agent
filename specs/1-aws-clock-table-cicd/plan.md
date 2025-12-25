@@ -223,7 +223,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 export interface SpecKitStackProps extends cdk.StackProps {
   environment: string; // 'dev' | 'staging'
-  githubRepository?: string; // GitHub repository name for OIDC (default: 'goataka/spec-kit-with-coding-agent')
+  githubRepository?: string; // GitHub repository name for OIDC
 }
 
 export class SpecKitStack extends cdk.Stack {
@@ -263,8 +263,6 @@ export class SpecKitStack extends cdk.Stack {
     );
     
     // Additional IAM permissions for CDK operations
-    // Note: These permissions use wildcard resources for CDK bootstrap compatibility.
-    // In production, consider restricting to specific resource patterns.
     githubActionsRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
@@ -281,12 +279,7 @@ export class SpecKitStack extends cdk.Stack {
         'iam:GetOpenIDConnectProvider',
         'iam:TagOpenIDConnectProvider',
       ],
-      resources: [
-        // CDK-created roles and OIDC provider
-        `arn:aws:iam::*:role/cdk-*`,
-        `arn:aws:iam::*:role/GitHubActionsDeployRole-${environment}`,
-        `arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com`,
-      ],
+      resources: ['*'],
     }));
 
     // DynamoDB Clock Table（環境ごとに異なるテーブル名）
@@ -535,53 +528,28 @@ jobs:
 
 ## 5. OIDC認証フロー
 
-### 5.1 初回セットアップ（CloudFormation推奨 - CDK管理へ移行）
+### 5.1 初回セットアップ（手動 - CDK管理へ移行）
 
-#### ステップ1: CloudFormationテンプレートでOIDCプロバイダーとIAMロールを作成（推奨）
+#### ステップ1: 初回のみ手動でOIDCプロバイダーとIAMロールを作成
 
-初回のみ、CloudFormationテンプレート `bootstrap-oidc.yaml` を使用してOIDCプロバイダーとIAMロールを作成します。
-
-**CloudFormationテンプレート使用（推奨）:**
+初回のみ、AWS CLIまたはAWSコンソールを使用してOIDCプロバイダーとIAMロールを手動で作成します。
 
 ```bash
-# CloudFormationスタックを作成
-aws cloudformation create-stack \
-  --stack-name spec-kit-github-oidc-bootstrap \
-  --template-body file://specs/1-aws-clock-table-cicd/bootstrap-oidc.yaml \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --parameters \
-    ParameterKey=GitHubOrg,ParameterValue=goataka \
-    ParameterKey=GitHubRepo,ParameterValue=spec-kit-with-coding-agent
-
-# デプロイ完了を待機
-aws cloudformation wait stack-create-complete \
-  --stack-name spec-kit-github-oidc-bootstrap
-
-# 出力値（ロールARN）を取得
-aws cloudformation describe-stacks \
-  --stack-name spec-kit-github-oidc-bootstrap \
-  --query 'Stacks[0].Outputs[?OutputKey==`GitHubSecretValue`].OutputValue' \
-  --output text
-```
-
-または、AWSマネジメントコンソールからCloudFormationサービスで `bootstrap-oidc.yaml` をアップロードしてデプロイすることもできます。
-
-**代替: AWS CLIでの手動作成:**
-
-CloudFormationが使用できない環境では、以下のコマンドで手動作成も可能です。
-
-<details>
-<summary>手動セットアップ手順（クリックして展開）</summary>
-
-```bash
-# IAM OIDC Provider作成
+# IAM OIDC Provider作成（初回のみ）
 aws iam create-open-id-connect-provider \
   --url https://token.actions.githubusercontent.com \
   --client-id-list sts.amazonaws.com \
   --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
 
-# Trust Policy JSONファイルを作成
-cat > trust-policy.json << 'EOF'
+# IAM Role作成（初回のみ - Trust Policyを含む）
+# Trust Policy JSONファイルを作成後、以下を実行
+aws iam create-role \
+  --role-name GitHubActionsDeployRole \
+  --assume-role-policy-document file://trust-policy.json
+```
+
+#### Trust Policy (初回手動設定用)
+```json
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -602,15 +570,7 @@ cat > trust-policy.json << 'EOF'
     }
   ]
 }
-EOF
-
-# IAM Role作成
-aws iam create-role \
-  --role-name GitHubActionsDeployRole-Initial \
-  --assume-role-policy-document file://trust-policy.json
 ```
-
-</details>
 
 #### ステップ2: CDKでOIDCとIAMロールを管理
 
@@ -897,43 +857,29 @@ const params = {
    - ワークフロー: デプロイワークフロー内で自動実行
    - 環境: dev
 
-#### フェーズ1: 初回セットアップ（CloudFormation）
-
-1. **CloudFormationでOIDCとIAMロールを作成** (推奨)
-   ```bash
-   aws cloudformation create-stack \
-     --stack-name spec-kit-github-oidc-bootstrap \
-     --template-body file://specs/1-aws-clock-table-cicd/bootstrap-oidc.yaml \
-     --capabilities CAPABILITY_NAMED_IAM
-   ```
-   または、AWSマネジメントコンソールからCloudFormationサービスでデプロイ
-
-2. **GitHub Secretsを設定**
-   - CloudFormation出力の `GitHubSecretValue` を取得
-   - `AWS_ROLE_TO_ASSUME`に設定
-
-3. **CDK Bootstrapを実行** (GitHub Actions手動トリガー)
-   - 環境: dev
-
 #### フェーズ2: CDKデプロイとOIDC管理移行
 
-4. **初回デプロイ実行** (GitHub Actions手動トリガー)
+5. **初回デプロイ実行** (GitHub Actions手動トリガー)
    - ワークフロー: `deploy-dev-to-aws.yml`
    - 入力: dev
    - このデプロイでCDK管理のOIDCプロバイダーとIAMロールが作成される
 
-5. **GitHub Secretsの更新**
-   - CDKスタックのCloudFormation出力から新しいロールARNを取得
+6. **GitHub Secretsの更新**
+   - CloudFormation出力から新しいロールARNを取得
    - `AWS_ROLE_TO_ASSUME`をCDK管理のロールARNに更新
 
-6. **ブートストラップスタックの削除**
+7. **手動作成したOIDCとロールの削除**
    ```bash
-   # CloudFormationスタックを削除（全リソースが自動削除される）
-   aws cloudformation delete-stack \
-     --stack-name spec-kit-github-oidc-bootstrap
+   # 手動作成したIAMロールを削除
+   aws iam detach-role-policy --role-name GitHubActionsDeployRole --policy-arn <policy-arn>
+   aws iam delete-role --role-name GitHubActionsDeployRole
+   
+   # 手動作成したOIDCプロバイダーを削除
+   aws iam delete-open-id-connect-provider \
+     --open-id-connect-provider-arn <手動作成したOIDC ARN>
    ```
 
-7. **動作確認**
+8. **動作確認**
    - 再度デプロイワークフローを実行し、CDK管理のOIDCで認証できることを確認
 
 ### 8.2 通常運用時のデプロイ（CDK管理後）
