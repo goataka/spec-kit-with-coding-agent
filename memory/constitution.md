@@ -1,8 +1,8 @@
 # Project Constitution: 勤怠管理システム
 
-**Version**: 1.2.0  
+**Version**: 1.3.0  
 **Ratified**: 2025-12-24  
-**Last Amended**: 2025-12-24
+**Last Amended**: 2025-12-25
 
 ## Purpose
 
@@ -188,15 +188,19 @@
   workflows/        # CI/CDワークフロー
 .specify/           # spec-kit設定とテンプレート
 memory/             # プロジェクト記憶と憲法
-specs/              # 機能仕様書（開発中）
-docs/               # 確定した仕様と実装ドキュメント
+specs/              # 機能仕様書（開発中、ブランチごと）
+docs/
+  architecture/     # アーキテクチャ仕様（技術設計、システム構成）
+  business/         # ビジネス仕様（要件、ユースケース、ドメインモデル）
 ```
 
-### Specification Consolidation Rule
+### Documentation Integration Rule
 
-- 実装完了・テスト合格時に `specs/` の仕様書を `docs/` に移動
-- 実装ドキュメント、アーキテクチャ図、APIドキュメントも `docs/` に配置
-- 確定した仕様を一元管理し、将来の参照を容易にする
+- 実装時に `docs/` 配下に統合仕様書を作成・更新
+- コード変更と同時にドキュメントを更新（実装完了後の移動ではなく）
+- アーキテクチャ仕様は `docs/architecture/` に配置
+- ビジネス仕様は `docs/business/` に配置
+- `specs/` はブランチ作業用、`docs/` は確定仕様の保管場所
 
 ### Future Migration
 
