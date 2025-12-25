@@ -223,7 +223,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 
 export interface SpecKitStackProps extends cdk.StackProps {
   environment: string; // 'dev' | 'staging'
-  githubRepository?: string; // GitHub repository name for OIDC
+  githubRepository?: string; // GitHub repository name for OIDC (default: 'goataka/spec-kit-with-coding-agent')
 }
 
 export class SpecKitStack extends cdk.Stack {
@@ -263,6 +263,8 @@ export class SpecKitStack extends cdk.Stack {
     );
     
     // Additional IAM permissions for CDK operations
+    // Note: These permissions use wildcard resources for CDK bootstrap compatibility.
+    // In production, consider restricting to specific resource patterns.
     githubActionsRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
@@ -279,7 +281,12 @@ export class SpecKitStack extends cdk.Stack {
         'iam:GetOpenIDConnectProvider',
         'iam:TagOpenIDConnectProvider',
       ],
-      resources: ['*'],
+      resources: [
+        // CDK-created roles and OIDC provider
+        `arn:aws:iam::*:role/cdk-*`,
+        `arn:aws:iam::*:role/GitHubActionsDeployRole-${environment}`,
+        `arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com`,
+      ],
     }));
 
     // DynamoDB Clock Table（環境ごとに異なるテーブル名）
