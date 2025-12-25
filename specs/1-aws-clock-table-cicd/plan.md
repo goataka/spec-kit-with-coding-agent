@@ -219,16 +219,68 @@ app.synth();
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 export interface SpecKitStackProps extends cdk.StackProps {
   environment: string; // 'dev' | 'staging'
+  githubRepository?: string; // GitHub repository name for OIDC
 }
 
 export class SpecKitStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SpecKitStackProps) {
     super(scope, id, props);
 
-    const { environment } = props;
+    const { environment, githubRepository = 'goataka/spec-kit-with-coding-agent' } = props;
+
+    // OIDC Provider for GitHub Actions
+    const githubProvider = new iam.OpenIdConnectProvider(this, 'GitHubProvider', {
+      url: 'https://token.actions.githubusercontent.com',
+      clientIds: ['sts.amazonaws.com'],
+    });
+
+    // IAM Role for GitHub Actions with OIDC
+    const githubActionsRole = new iam.Role(this, 'GitHubActionsRole', {
+      assumedBy: new iam.FederatedPrincipal(
+        githubProvider.openIdConnectProviderArn,
+        {
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+          },
+          StringLike: {
+            'token.actions.githubusercontent.com:sub': `repo:${githubRepository}:*`,
+          },
+        },
+        'sts:AssumeRoleWithWebIdentity'
+      ),
+      description: `Role for GitHub Actions to deploy infrastructure (${environment})`,
+      roleName: `GitHubActionsDeployRole-${environment}`,
+      maxSessionDuration: cdk.Duration.hours(1),
+    });
+
+    // Attach necessary policies for deployment
+    githubActionsRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess')
+    );
+    
+    // Additional IAM permissions for CDK operations
+    githubActionsRole.addToPolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'iam:CreateRole',
+        'iam:DeleteRole',
+        'iam:AttachRolePolicy',
+        'iam:DetachRolePolicy',
+        'iam:PutRolePolicy',
+        'iam:DeleteRolePolicy',
+        'iam:GetRole',
+        'iam:PassRole',
+        'iam:CreateOpenIDConnectProvider',
+        'iam:DeleteOpenIDConnectProvider',
+        'iam:GetOpenIDConnectProvider',
+        'iam:TagOpenIDConnectProvider',
+      ],
+      resources: ['*'],
+    }));
 
     // DynamoDB Clock Table（環境ごとに異なるテーブル名）
     const clockTable = new dynamodb.Table(this, 'ClockTable', {
@@ -272,6 +324,18 @@ export class SpecKitStack extends cdk.Stack {
       value: clockTable.tableArn,
       description: `DynamoDB clock table ARN (${environment})`,
       exportName: `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableArn`,
+    });
+
+    new cdk.CfnOutput(this, 'GitHubActionsRoleArn', {
+      value: githubActionsRole.roleArn,
+      description: `IAM Role ARN for GitHub Actions (${environment})`,
+      exportName: `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GitHubActionsRoleArn`,
+    });
+
+    new cdk.CfnOutput(this, 'OIDCProviderArn', {
+      value: githubProvider.openIdConnectProviderArn,
+      description: `OIDC Provider ARN for GitHub Actions (${environment})`,
+      exportName: `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-OIDCProviderArn`,
     });
   }
 }
@@ -464,17 +528,27 @@ jobs:
 
 ## 5. OIDC認証フロー
 
-### 5.1 AWS側セットアップ (手動 - 初回のみ)
+### 5.1 初回セットアップ（手動 - CDK管理へ移行）
 
-#### IAM OIDC Provider作成
+#### ステップ1: 初回のみ手動でOIDCプロバイダーとIAMロールを作成
+
+初回のみ、AWS CLIまたはAWSコンソールを使用してOIDCプロバイダーとIAMロールを手動で作成します。
+
 ```bash
+# IAM OIDC Provider作成（初回のみ）
 aws iam create-open-id-connect-provider \
   --url https://token.actions.githubusercontent.com \
   --client-id-list sts.amazonaws.com \
   --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
+
+# IAM Role作成（初回のみ - Trust Policyを含む）
+# Trust Policy JSONファイルを作成後、以下を実行
+aws iam create-role \
+  --role-name GitHubActionsDeployRole \
+  --assume-role-policy-document file://trust-policy.json
 ```
 
-#### IAM Role作成 (Trust Policy)
+#### Trust Policy (初回手動設定用)
 ```json
 {
   "Version": "2012-10-17",
@@ -498,7 +572,58 @@ aws iam create-open-id-connect-provider \
 }
 ```
 
-#### IAM Policy (最小権限)
+#### ステップ2: CDKでOIDCとIAMロールを管理
+
+初回デプロイ後は、CDKでOIDCプロバイダーとIAMロールを管理します。
+
+**CDKスタックでの実装**:
+```typescript
+import * as iam from 'aws-cdk-lib/aws-iam';
+
+// OIDC Provider for GitHub Actions
+const githubProvider = new iam.OpenIdConnectProvider(this, 'GitHubProvider', {
+  url: 'https://token.actions.githubusercontent.com',
+  clientIds: ['sts.amazonaws.com'],
+});
+
+// IAM Role for GitHub Actions
+const githubActionsRole = new iam.Role(this, 'GitHubActionsRole', {
+  assumedBy: new iam.FederatedPrincipal(
+    githubProvider.openIdConnectProviderArn,
+    {
+      StringEquals: {
+        'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+      },
+      StringLike: {
+        'token.actions.githubusercontent.com:sub': `repo:goataka/spec-kit-with-coding-agent:*`,
+      },
+    },
+    'sts:AssumeRoleWithWebIdentity'
+  ),
+  description: 'Role for GitHub Actions to deploy infrastructure',
+  roleName: `GitHubActionsDeployRole-${environment}`,
+});
+
+// 必要な権限をアタッチ
+githubActionsRole.addManagedPolicy(
+  iam.ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess')
+);
+```
+
+#### ステップ3: 手動設定を削除
+
+CDKでOIDCとIAMロールがデプロイされた後、初回に手動作成したリソースを削除します。
+
+```bash
+# 手動作成したIAMロールを削除
+aws iam delete-role --role-name GitHubActionsDeployRole
+
+# 手動作成したOIDCプロバイダーを削除（CDK管理版が存在することを確認後）
+aws iam delete-open-id-connect-provider \
+  --open-id-connect-provider-arn arn:aws:iam::{ACCOUNT_ID}:oidc-provider/token.actions.githubusercontent.com
+```
+
+### 5.2 IAM Policy (最小権限)
 ```json
 {
   "Version": "2012-10-17",
@@ -585,11 +710,13 @@ aws iam create-open-id-connect-provider \
 }
 ```
 
-### 5.2 GitHub Secrets設定
+### 5.3 GitHub Secrets設定
+
+初回セットアップ時のみ、手動作成したIAMロールのARNを設定します。CDKデプロイ後は、CDK管理のロールARNに更新します。
 
 | Secret名 | 値 | 説明 |
 |----------|-----|------|
-| `AWS_ROLE_TO_ASSUME` | `arn:aws:iam::{ACCOUNT_ID}:role/GitHubActionsDeployRole` | OIDCで引き受けるIAMロールARN |
+| `AWS_ROLE_TO_ASSUME` | 初回: `arn:aws:iam::{ACCOUNT_ID}:role/GitHubActionsDeployRole`<br/>CDK管理後: CloudFormation出力から取得 | OIDCで引き受けるIAMロールARN |
 
 ## 6. DynamoDB設計詳細
 
@@ -707,31 +834,55 @@ const params = {
 
 ## 8. デプロイメント戦略
 
-### 8.1 初回セットアップ手順
+### 8.1 初回セットアップ手順（手動OIDC → CDK管理へ移行）
 
-1. **AWS OIDCプロバイダー作成** (手動)
+#### フェーズ1: 初回手動セットアップ
+
+1. **AWS OIDCプロバイダー作成** (手動 - 初回のみ)
    ```bash
    aws iam create-open-id-connect-provider \
      --url https://token.actions.githubusercontent.com \
-     --client-id-list sts.amazonaws.com
+     --client-id-list sts.amazonaws.com \
+     --thumbprint-list 6938fd4d98bab03faadb97b34396831e3780aea1
    ```
 
-2. **IAMロール作成** (手動 または CDK synthで生成したテンプレートを使用)
+2. **IAMロール作成** (手動 - 初回のみ)
    - Trust Policy設定
-   - 必要なIAMポリシーをアタッチ
+   - 必要なIAMポリシーをアタッチ（PowerUserAccess + IAM権限）
 
 3. **GitHub Secrets設定** (手動)
-   - `AWS_ROLE_TO_ASSUME`を設定
+   - `AWS_ROLE_TO_ASSUME`に手動作成したロールARNを設定
 
 4. **CDK Bootstrap実行** (GitHub Actions手動トリガー)
-   - ワークフロー: `cdk-bootstrap.yml`
-   - 入力: dev, ap-northeast-1
+   - ワークフロー: デプロイワークフロー内で自動実行
+   - 環境: dev
+
+#### フェーズ2: CDKデプロイとOIDC管理移行
 
 5. **初回デプロイ実行** (GitHub Actions手動トリガー)
    - ワークフロー: `deploy-dev-to-aws.yml`
    - 入力: dev
+   - このデプロイでCDK管理のOIDCプロバイダーとIAMロールが作成される
 
-### 8.2 通常運用時のデプロイ
+6. **GitHub Secretsの更新**
+   - CloudFormation出力から新しいロールARNを取得
+   - `AWS_ROLE_TO_ASSUME`をCDK管理のロールARNに更新
+
+7. **手動作成したOIDCとロールの削除**
+   ```bash
+   # 手動作成したIAMロールを削除
+   aws iam detach-role-policy --role-name GitHubActionsDeployRole --policy-arn <policy-arn>
+   aws iam delete-role --role-name GitHubActionsDeployRole
+   
+   # 手動作成したOIDCプロバイダーを削除
+   aws iam delete-open-id-connect-provider \
+     --open-id-connect-provider-arn <手動作成したOIDC ARN>
+   ```
+
+8. **動作確認**
+   - 再度デプロイワークフローを実行し、CDK管理のOIDCで認証できることを確認
+
+### 8.2 通常運用時のデプロイ（CDK管理後）
 
 1. **開発者がinfrastructure/配下を変更**
 2. **PRを作成し、レビュー**
@@ -832,20 +983,26 @@ test('Global Secondary Index Created', () => {
 2. **Bootstrap Workflow**: テスト環境で手動実行
 3. **Deploy Workflow**: PR作成してdry-run確認後、mainマージで実行
 
-## 10. モニタリング・運用
+## 10. モニタリング・運用（コスト最小化版）
 
 ### 10.1 CloudFormationスタック監視
 
 - AWS CloudFormationコンソールでスタックステータス確認
 - デプロイ履歴とイベントログ確認
 
-### 10.2 DynamoDBメトリクス監視
+### 10.2 基本的なDynamoDBメトリクス監視（無料）
 
-- CloudWatch メトリクス:
+- CloudWatch メトリクス（基本メトリクス - 無料）:
   - ConsumedReadCapacityUnits (読み込み使用量)
   - ConsumedWriteCapacityUnits (書き込み使用量)
   - UserErrors (クライアントエラー)
   - SystemErrors (サーバーエラー)
+
+**注意**: 初期段階ではコスト削減のため、以下は実装しません:
+- CloudWatchアラーム（スロットルアラームなど）
+- カスタムメトリクス
+- 詳細なモニタリング
+- SNS通知
 
 ### 10.3 GitHub Actions実行監視
 
@@ -860,7 +1017,7 @@ test('Global Secondary Index Created', () => {
 - `aws-clock-table-infrastructure.md`: インフラストラクチャ設計詳細
 - `dynamodb-schema.md`: テーブル設計とクエリパターン
 - `cicd-workflow.md`: CI/CDワークフロー説明
-- `oidc-authentication.md`: OIDC認証フロー
+- `oidc-authentication.md`: OIDC認証フロー（CDK管理への移行を含む）
 
 ### 11.2 ビジネスドキュメント (docs/business/)
 
