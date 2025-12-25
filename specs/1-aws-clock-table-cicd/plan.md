@@ -45,9 +45,22 @@
 graph TB
     subgraph GitHub["GitHub Repository"]
         infra["infrastructure/"]
-        infra_files["CDK Files:<br/>• bin/app.ts<br/>• lib/stack.ts<br/>• cdk.json"]
+        infra_files["CDK Files"]
+        infra_bin["bin/app.ts"]
+        infra_lib["lib/stack.ts"]
+        infra_config["cdk.json"]
         workflows[".github/workflows/"]
-        workflow_files["Workflows:<br/>• deploy-dev-to-aws.yml<br/>• cdk-bootstrap.yml<br/>• cdk-synth.yml"]
+        wf_deploy["deploy-dev-to-aws.yml"]
+        wf_bootstrap["cdk-bootstrap.yml"]
+        wf_synth["cdk-synth.yml"]
+        
+        infra --> infra_files
+        infra_files --> infra_bin
+        infra_files --> infra_lib
+        infra_files --> infra_config
+        workflows --> wf_deploy
+        workflows --> wf_bootstrap
+        workflows --> wf_synth
     end
     
     subgraph Actions["GitHub Actions"]
@@ -62,21 +75,38 @@ graph TB
     
     subgraph AWS["AWS Account"]
         oidc["IAM OIDC Provider"]
-        oidc_detail["Provider: token.actions.githubusercontent.com<br/>Audience: sts.amazonaws.com"]
+        oidc_provider["token.actions.githubusercontent.com"]
+        oidc_audience["sts.amazonaws.com"]
         
         subgraph Stack1["CloudFormation: SpecKitDevStack"]
             dynamo["DynamoDB Table"]
-            dynamo_detail["Table: spec-kit-dev-clock<br/>Keys: userId + timestamp<br/>GSI: DateIndex<br/>Billing: PAY_PER_REQUEST<br/>PITR: Enabled"]
+            dynamo_name["spec-kit-dev-clock"]
+            dynamo_keys["userId + timestamp"]
+            dynamo_gsi["GSI: DateIndex"]
+            dynamo_billing["PAY_PER_REQUEST"]
+            
+            dynamo --> dynamo_name
+            dynamo --> dynamo_keys
+            dynamo --> dynamo_gsi
+            dynamo --> dynamo_billing
         end
         
         subgraph Stack2["CloudFormation: CDKToolkit"]
-            toolkit["CDK Bootstrap Resources"]
-            toolkit_detail["S3 Bucket<br/>ECR Repository<br/>IAM Roles"]
+            toolkit["CDK Bootstrap"]
+            toolkit_s3["S3 Bucket"]
+            toolkit_ecr["ECR Repository"]
+            toolkit_iam["IAM Roles"]
+            
+            toolkit --> toolkit_s3
+            toolkit --> toolkit_ecr
+            toolkit --> toolkit_iam
         end
+        
+        oidc --> oidc_provider
+        oidc --> oidc_audience
     end
     
-    infra --> Actions
-    workflows --> Actions
+    GitHub --> Actions
     Actions --> oidc
     oidc --> Stack1
     oidc --> Stack2
