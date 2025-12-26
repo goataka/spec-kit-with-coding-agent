@@ -67,10 +67,24 @@ Commit: [be9f233](https://github.com/goataka/spec-kit-with-coding-agent/commit/b
 
 ## 言語ポリシー
 
-- **仕様書**: 日本語
-- **コード**: 英語（変数名、関数名、コミットメッセージ）
+### 日本語を使用する箇所
+
+- **仕様書**: spec.md、plan.md、tasks.mdなど、すべての仕様書とドキュメント
+- **PRとコミット**: Pull Requestのタイトル・説明、コミットメッセージ
+- **レビューとコメント**: コードレビューコメント、Issueのタイトル・説明
+- **Agentとのやり取り**: GitHub Copilot Agentとのすべてのやり取り
+
+### 英語を使用する箇所
+
+- **コード**: 変数名、関数名、クラス名、コードコメント
+- **技術用語**: OIDC、CDK、CloudFormationなど技術的な固有名詞
+
+### GitHub Copilotへの指示
+
+GitHub Copilotが自動的にこの言語ポリシーを適用できるよう、[copilot-instructions.md](../.github/copilot-instructions.md)に詳細な指示を記載しています。
 
 ## 参考資料
 
-- [プロジェクト憲法](./memory/constitution.md)
+- [GitHub Copilotカスタムインストラクション](../copilot-instructions.md)
+- [プロジェクト憲法](../../memory/constitution.md)
 - [Spec-Kit GitHubリポジトリ](https://github.com/github/spec-kit)
