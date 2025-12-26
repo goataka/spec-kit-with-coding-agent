@@ -258,11 +258,13 @@ export class SpecKitStack extends cdk.Stack {
     });
 
     // Attach necessary policies for deployment
+    // NOTE: PowerUserAccessを使用（初期段階では簡易設定、本番環境では最小権限に変更すべき）
     githubActionsRole.addManagedPolicy(
       iam.ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess')
     );
     
     // Additional IAM permissions for CDK operations
+    // セキュリティ要件: リソースを特定のパターンにスコープし、ワイルドカードを回避
     githubActionsRole.addToPolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
@@ -279,7 +281,11 @@ export class SpecKitStack extends cdk.Stack {
         'iam:GetOpenIDConnectProvider',
         'iam:TagOpenIDConnectProvider',
       ],
-      resources: ['*'],
+      resources: [
+        'arn:aws:iam::*:role/cdk-*',
+        `arn:aws:iam::*:role/GitHubActionsDeployRole-${environment}`,
+        'arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com',
+      ],
     }));
 
     // DynamoDB Clock Table（環境ごとに異なるテーブル名）
