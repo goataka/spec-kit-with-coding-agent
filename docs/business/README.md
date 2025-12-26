@@ -26,9 +26,3 @@
 - `{domain-name}-model.md` - ドメインモデル
 - `{process-name}-flow.md` - ビジネスフロー
 
-## 関連ドキュメント
-
-- [アーキテクチャ仕様](../architecture/)
-- [インフラストラクチャREADME](../../infrastructure/README.md)
-- [仕様書](../../specs/)
-

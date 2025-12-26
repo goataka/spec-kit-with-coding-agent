@@ -408,8 +408,3 @@ A: はい、PC、スマートフォン、タブレットなど複数デバイス
 - [ ] 顔認証打刻
 - [ ] AI予測（勤怠パターン分析）
 
-## 関連ドキュメント
-
-- [アーキテクチャドキュメント](./dynamodb-clock-table.md)
-- [セットアップガイド](../infrastructure/README.md)
-- [仕様書](../specs/1-aws-clock-table-cicd/spec.md)

@@ -1,34 +1,14 @@
-# DynamoDB Clock Table アーキテクチャ
+# DynamoDB Clock Table
 
 ## 概要
 
-このドキュメントでは、spec-kit勤怠管理システムのDynamoDB Clock Tableのアーキテクチャについて説明します。
+このドキュメントでは、spec-kit勤怠管理システムのDynamoDB Clock Tableの設計について説明します。
 
-## システム構成図
+## データベース構成図
 
 ```mermaid
 graph TB
-    subgraph GitHub["GitHub Repository"]
-        code["Infrastructure Code<br/>(AWS CDK TypeScript)"]
-        workflows["GitHub Actions<br/>Workflows"]
-    end
-    
-    subgraph GitHubActions["GitHub Actions Runner"]
-        checkout["Checkout Code"]
-        build["Build & Test"]
-        oidc["OIDC Authentication"]
-        deploy["CDK Deploy"]
-        
-        checkout --> build --> oidc --> deploy
-    end
-    
     subgraph AWS["AWS Cloud (ap-northeast-1)"]
-        subgraph IAM["IAM"]
-            provider["OIDC Provider<br/>token.actions.githubusercontent.com"]
-            role["IAM Role<br/>GitHubActionsDeployRole-{env}"]
-            provider --> role
-        end
-        
         subgraph CloudFormation["CloudFormation"]
             stack["SpecKit-{Env}-Stack"]
         end
@@ -42,14 +22,8 @@ graph TB
         stack --> table
     end
     
-    workflows --> GitHubActions
-    oidc --> provider
-    deploy --> stack
-    
     style table fill:#FF9900
     style gsi fill:#FF9900
-    style provider fill:#DD344C
-    style role fill:#DD344C
 ```
 
 ## DynamoDB テーブル設計
@@ -251,41 +225,7 @@ const result = await dynamodb.query(params).promise();
 - `ManagedBy`: CDK
 - `CostCenter`: Engineering
 
-## CI/CD デプロイフロー
-
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant GH as GitHub
-    participant GA as GitHub Actions
-    participant AWS as AWS
-    participant CF as CloudFormation
-    participant DB as DynamoDB
-    
-    Dev->>GH: Push to main (infrastructure/)
-    GH->>GA: Trigger workflow
-    GA->>GA: Checkout code
-    GA->>GA: Setup Node.js & Build
-    GA->>GA: Run tests
-    GA->>AWS: OIDC Authentication
-    AWS->>GA: Temporary credentials
-    GA->>AWS: CDK Bootstrap (if needed)
-    GA->>AWS: CDK Deploy
-    AWS->>CF: Create/Update Stack
-    CF->>DB: Create/Update Table
-    CF->>GA: Stack outputs
-    GA->>GH: Deployment success
-    GH->>Dev: Notification
-```
-
-## セキュリティ
-
-### 認証・認可
-
-- **OIDC認証**: GitHub ActionsとAWS間の認証に使用
-- **一時認証情報**: 永続的なアクセスキー不要
-- **IAMロール**: 最小権限原則に基づく権限設定
-- **リポジトリ制限**: 特定のGitHubリポジトリのみアクセス可能
+## データセキュリティ
 
 ### データ保護
 
@@ -293,24 +233,6 @@ sequenceDiagram
 - **転送時暗号化**: HTTPS
 - **PITR**: 35日間の継続バックアップ
 - **削除ポリシー**: RETAINによる誤削除防止
-
-### アクセス制御
-
-```mermaid
-graph LR
-    A[GitHub Actions] -->|OIDC| B[OIDC Provider]
-    B -->|Trust Policy| C[IAM Role]
-    C -->|Permissions| D[CloudFormation]
-    C -->|Permissions| E[DynamoDB]
-    C -->|Permissions| F[S3 CDK Assets]
-    
-    style A fill:#2088FF
-    style B fill:#DD344C
-    style C fill:#DD344C
-    style D fill:#FF9900
-    style E fill:#FF9900
-    style F fill:#FF9900
-```
 
 ## 監視とメトリクス
 
@@ -402,9 +324,3 @@ aws dynamodb restore-table-to-point-in-time \
 - テーブル削除時のデータ保護のため、削除ポリシーはRETAIN
 - スタック削除前にテーブルの手動削除が必要な場合は、CloudFormationコンソールで対応
 
-## 関連ドキュメント
-
-- [セットアップガイド](../infrastructure/README.md)
-- [仕様書](../specs/1-aws-clock-table-cicd/spec.md)
-- [技術計画](../specs/1-aws-clock-table-cicd/plan.md)
-- [AWS DynamoDB Best Practices](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
