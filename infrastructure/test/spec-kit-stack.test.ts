@@ -17,7 +17,7 @@ describe('SpecKitStack', () => {
 
   test('DynamoDB Table Created', () => {
     template.hasResourceProperties('AWS::DynamoDB::Table', {
-      TableName: 'attendance-kyt-dev-clock',
+      TableName: 'attendance-kit-dev-clock',
       BillingMode: 'PAY_PER_REQUEST',
       PointInTimeRecoverySpecification: {
         PointInTimeRecoveryEnabled: true,
@@ -91,7 +91,7 @@ describe('SpecKitStack', () => {
 
   test('Table name includes environment', () => {
     template.hasResourceProperties('AWS::DynamoDB::Table', {
-      TableName: 'attendance-kyt-dev-clock',
+      TableName: 'attendance-kit-dev-clock',
     });
   });
 
@@ -159,7 +159,7 @@ describe('SpecKitStack - Staging Environment', () => {
     const template = Template.fromStack(stack);
 
     template.hasResourceProperties('AWS::DynamoDB::Table', {
-      TableName: 'attendance-kyt-staging-clock',
+      TableName: 'attendance-kit-staging-clock',
     });
   });
 });

@@ -2,7 +2,7 @@
 
 ## ワークフローサマリー
 
-このディレクトリには、attendance-kyt プロジェクトの CI/CD ワークフローが含まれています。
+このディレクトリには、attendance-kit プロジェクトの CI/CD ワークフローが含まれています。
 
 ### deploy-to-aws.yml
 

@@ -25,7 +25,7 @@ AWS CDKを使用したDynamoDB Clock TableのCI/CDインフラストラクチャ
 
 **主要機能**:
 - 環境パラメータ対応（dev/staging）
-- DynamoDB Table: `attendance-kyt-{environment}-clock`
+- DynamoDB Table: `attendance-kit-{environment}-clock`
   - Partition Key: `userId` (String)
   - Sort Key: `timestamp` (String)
   - GSI: `DateIndex` (date + timestamp)
@@ -167,7 +167,7 @@ Time:        ~5s
 **実装内容**:
 - すべてのリソースに以下のタグを付与：
   - `Environment`: dev / staging
-  - `Project`: attendance-kyt
+  - `Project`: attendance-kit
   - `ManagedBy`: CDK
   - `CostCenter`: Engineering
 

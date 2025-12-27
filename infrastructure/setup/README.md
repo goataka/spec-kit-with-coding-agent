@@ -25,7 +25,7 @@
 
 ## ステップ4: GitHub Secretsの更新
 
-1. デプロイ完了後、CloudFormationコンソールで`AttendanceKyt-Dev-Stack`のOutputsを確認
+1. デプロイ完了後、CloudFormationコンソールで`AttendanceKit-Dev-Stack`のOutputsを確認
 2. `GitHubActionsRoleArn`の値をコピー
 3. GitHub Secretsの`AWS_ROLE_TO_ASSUME`を新しいARNに更新
 

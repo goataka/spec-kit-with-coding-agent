@@ -13,7 +13,7 @@ AWS CDKを使用したDynamoDB Clock Tableのインフラストラクチャコ�
 
 このインフラストラクチャには以下が含まれます：
 
-- **DynamoDB Table**: `attendance-kyt-{environment}-clock`
+- **DynamoDB Table**: `attendance-kit-{environment}-clock`
   - Partition Key: `userId` (String)
   - Sort Key: `timestamp` (String, ISO 8601形式)
   - Global Secondary Index: `DateIndex` (date + timestamp)
@@ -54,7 +54,7 @@ AWS CDKを使用したDynamoDB Clock Tableのインフラストラクチャコ�
 
 ### ステップ4: GitHub Secretsを更新
 
-1. デプロイ完了後、AWS CloudFormationコンソールで `AttendanceKyt-Dev-Stack` の Outputs を確認
+1. デプロイ完了後、AWS CloudFormationコンソールで `AttendanceKit-Dev-Stack` の Outputs を確認
 2. `GitHubActionsRoleArn` の値をコピー
 3. GitHub Secrets の `AWS_ROLE_TO_ASSUME` を新しいARNに更新
 
@@ -172,7 +172,7 @@ CloudFormationが差分更新を実行します。RETAIN削除ポリシーによ
 すべてのリソースには以下のタグが付与されます：
 
 - `Environment`: dev / staging
-- `Project`: attendance-kyt
+- `Project`: attendance-kit
 - `ManagedBy`: CDK
 - `CostCenter`: Engineering
 

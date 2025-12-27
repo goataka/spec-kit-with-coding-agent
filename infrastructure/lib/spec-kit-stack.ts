@@ -83,7 +83,7 @@ export class SpecKitStack extends cdk.Stack {
 
     // DynamoDB Clock Table
     this.clockTable = new dynamodb.Table(this, 'ClockTable', {
-      tableName: `attendance-kyt-${environment}-clock`,
+      tableName: `attendance-kit-${environment}-clock`,
       partitionKey: {
         name: 'userId',
         type: dynamodb.AttributeType.STRING,
@@ -117,7 +117,7 @@ export class SpecKitStack extends cdk.Stack {
 
     // Cost monitoring tags
     cdk.Tags.of(this.clockTable).add('Environment', environment);
-    cdk.Tags.of(this.clockTable).add('Project', 'attendance-kyt');
+    cdk.Tags.of(this.clockTable).add('Project', 'attendance-kit');
     cdk.Tags.of(this.clockTable).add('ManagedBy', 'CDK');
     cdk.Tags.of(this.clockTable).add('CostCenter', 'Engineering');
 
@@ -125,37 +125,37 @@ export class SpecKitStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'TableName', {
       value: this.clockTable.tableName,
       description: `DynamoDB clock table name (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableName`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableName`,
     });
 
     new cdk.CfnOutput(this, 'TableArn', {
       value: this.clockTable.tableArn,
       description: `DynamoDB clock table ARN (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableArn`,
     });
 
     new cdk.CfnOutput(this, 'GSIName', {
       value: 'DateIndex',
       description: `Global Secondary Index name (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GSIName`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GSIName`,
     });
 
     new cdk.CfnOutput(this, 'Environment', {
       value: environment,
       description: 'Deployment environment',
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Environment`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Environment`,
     });
 
     new cdk.CfnOutput(this, 'GitHubActionsRoleArn', {
       value: this.githubActionsRole.roleArn,
       description: `IAM Role ARN for GitHub Actions (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GitHubActionsRoleArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GitHubActionsRoleArn`,
     });
 
     new cdk.CfnOutput(this, 'OIDCProviderArn', {
       value: this.githubProvider.openIdConnectProviderArn,
       description: `OIDC Provider ARN for GitHub Actions (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-OIDCProviderArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-OIDCProviderArn`,
     });
   }
 }

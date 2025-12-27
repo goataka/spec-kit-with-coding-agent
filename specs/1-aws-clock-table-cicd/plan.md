@@ -76,7 +76,7 @@ graph TB
         
         subgraph Stack1["CloudFormation: SpecKitDevStack"]
             dynamo["DynamoDB Table"]
-            dynamo_name["attendance-kyt-dev-clock"]
+            dynamo_name["attendance-kit-dev-clock"]
             dynamo_keys["userId + timestamp"]
             dynamo_gsi["GSI: DateIndex"]
             dynamo_billing["PAY_PER_REQUEST"]
@@ -182,13 +182,13 @@ const env = {
 };
 
 // Stackインスタンス作成（環境をパラメータとして渡す）
-new SpecKitStack(app, `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Stack`, {
+new SpecKitStack(app, `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Stack`, {
   env,
   environment,
-  description: `DynamoDB clock table for attendance-kyt (${environment} environment)`,
+  description: `DynamoDB clock table for attendance-kit (${environment} environment)`,
   tags: {
     Environment: environment,
-    Project: 'attendance-kyt',
+    Project: 'attendance-kit',
     ManagedBy: 'CDK',
   },
 });
@@ -272,7 +272,7 @@ export class SpecKitStack extends cdk.Stack {
 
     // DynamoDB Clock Table（環境ごとに異なるテーブル名）
     const clockTable = new dynamodb.Table(this, 'ClockTable', {
-      tableName: `attendance-kyt-${environment}-clock`,
+      tableName: `attendance-kit-${environment}-clock`,
       partitionKey: {
         name: 'userId',
         type: dynamodb.AttributeType.STRING,
@@ -305,25 +305,25 @@ export class SpecKitStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'TableName', {
       value: clockTable.tableName,
       description: `DynamoDB clock table name (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableName`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableName`,
     });
 
     new cdk.CfnOutput(this, 'TableArn', {
       value: clockTable.tableArn,
       description: `DynamoDB clock table ARN (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableArn`,
     });
 
     new cdk.CfnOutput(this, 'GitHubActionsRoleArn', {
       value: githubActionsRole.roleArn,
       description: `IAM Role ARN for GitHub Actions (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GitHubActionsRoleArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GitHubActionsRoleArn`,
     });
 
     new cdk.CfnOutput(this, 'OIDCProviderArn', {
       value: githubProvider.openIdConnectProviderArn,
       description: `OIDC Provider ARN for GitHub Actions (${environment})`,
-      exportName: `AttendanceKyt-${environment.charAt(0).toUpperCase() + environment.slice(1)}-OIDCProviderArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-OIDCProviderArn`,
     });
   }
 }
@@ -333,7 +333,7 @@ export class SpecKitStack extends cdk.Stack {
 
 ```json
 {
-  "name": "attendance-kyt-infrastructure",
+  "name": "attendance-kit-infrastructure",
   "version": "1.0.0",
   "scripts": {
     "build": "tsc",
@@ -443,7 +443,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment || 'dev' }}
         run: |
           echo "Deployment completed successfully for environment: ${ENVIRONMENT}"
-          STACK_NAME="AttendanceKyt-$(echo ${ENVIRONMENT} | sed 's/.*/\u&/')-Stack"
+          STACK_NAME="AttendanceKit-$(echo ${ENVIRONMENT} | sed 's/.*/\u&/')-Stack"
           echo "Stack outputs:"
           aws cloudformation describe-stacks \
             --stack-name ${STACK_NAME} \
@@ -644,7 +644,7 @@ AWSコンソールから:
         "cloudformation:ListStacks"
       ],
       "Resource": [
-        "arn:aws:cloudformation:*:*:stack/attendance-kyt-*",
+        "arn:aws:cloudformation:*:*:stack/attendance-kit-*",
         "arn:aws:cloudformation:*:*:stack/CDKToolkit/*"
       ]
     },
@@ -664,7 +664,7 @@ AWSコンソールから:
         "dynamodb:TagResource",
         "dynamodb:UntagResource"
       ],
-      "Resource": "arn:aws:dynamodb:*:*:table/attendance-kyt-*-clock"
+      "Resource": "arn:aws:dynamodb:*:*:table/attendance-kit-*-clock"
     },
     {
       "Sid": "AllowS3ForCdkBootstrapBucket",
@@ -759,7 +759,7 @@ AWSコンソールから:
 ```typescript
 // Primary Key Query
 const params = {
-  TableName: 'attendance-kyt-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   KeyConditionExpression: 'userId = :userId',
   ExpressionAttributeValues: {
     ':userId': 'user123'
@@ -771,7 +771,7 @@ const params = {
 ```typescript
 // Primary Key + Range Query
 const params = {
-  TableName: 'attendance-kyt-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   KeyConditionExpression: 'userId = :userId AND #timestamp BETWEEN :start AND :end',
   ExpressionAttributeNames: {
     '#timestamp': 'timestamp'
@@ -788,7 +788,7 @@ const params = {
 ```typescript
 // GSI Query
 const params = {
-  TableName: 'attendance-kyt-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   IndexName: 'DateIndex',
   KeyConditionExpression: '#date = :date',
   ExpressionAttributeNames: {
@@ -907,7 +907,7 @@ test('DynamoDB Table Created', () => {
   const template = Template.fromStack(stack);
 
   template.hasResourceProperties('AWS::DynamoDB::Table', {
-    TableName: 'attendance-kyt-dev-clock',
+    TableName: 'attendance-kit-dev-clock',
     BillingMode: 'PAY_PER_REQUEST',
     PointInTimeRecoverySpecification: {
       PointInTimeRecoveryEnabled: true
@@ -938,13 +938,13 @@ test('Global Secondary Index Created', () => {
 
 1. **テーブル存在確認**
    ```bash
-   aws dynamodb describe-table --table-name attendance-kyt-dev-clock
+   aws dynamodb describe-table --table-name attendance-kit-dev-clock
    ```
 
 2. **書き込みテスト**
    ```bash
    aws dynamodb put-item \
-     --table-name attendance-kyt-dev-clock \
+     --table-name attendance-kit-dev-clock \
      --item '{
        "userId": {"S": "test-user"},
        "timestamp": {"S": "2025-12-25T09:00:00Z"},
@@ -956,7 +956,7 @@ test('Global Secondary Index Created', () => {
 3. **クエリテスト (Primary Key)**
    ```bash
    aws dynamodb query \
-     --table-name attendance-kyt-dev-clock \
+     --table-name attendance-kit-dev-clock \
      --key-condition-expression "userId = :userId" \
      --expression-attribute-values '{":userId":{"S":"test-user"}}'
    ```
@@ -964,7 +964,7 @@ test('Global Secondary Index Created', () => {
 4. **クエリテスト (GSI)**
    ```bash
    aws dynamodb query \
-     --table-name attendance-kyt-dev-clock \
+     --table-name attendance-kit-dev-clock \
      --index-name DateIndex \
      --key-condition-expression "#date = :date" \
      --expression-attribute-names '{"#date":"date"}' \
