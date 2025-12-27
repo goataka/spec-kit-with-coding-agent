@@ -46,25 +46,6 @@ docs/
 - ビジネス仕様: `docs/business/`
 - コード変更とドキュメント更新は同一コミット
 
-### コミットID提示のルール
-
-エージェントがコメントでコミットIDを提示する際は、必ずGitHubへのリンクを付ける:
-
-**形式**:
-```
-Commit: [短縮SHA](https://github.com/goataka/spec-kit-with-coding-agent/commit/完全SHA)
-```
-
-**例**:
-```
-Commit: [be9f233](https://github.com/goataka/spec-kit-with-coding-agent/commit/be9f233)
-```
-
-**理由**:
-- ユーザーがワンクリックでコミット内容を確認可能
-- コードレビューの効率化
-- 変更履歴の追跡性向上
-
 ## 言語ポリシー
 
 ### 日本語を使用する箇所

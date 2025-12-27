@@ -1,5 +1,9 @@
 # GitHub Copilot カスタムインストラクション
 
+このドキュメントに記載された指示に加えて、以下のリンク先ドキュメントの内容も指示として考慮してください:
+- [Agent開発ガイドライン](./.github/agents/AGENTS.md) - Spec-kitワークフローの詳細
+- [プロジェクト憲法](../memory/constitution.md) - プロジェクトの核心原則
+
 ## 言語ポリシー
 
 このリポジトリでは、以下の言語ポリシーを遵守してください:
@@ -17,6 +21,25 @@
 
 1. **コード**: 変数名、関数名、クラス名、コメントは英語で記述してください
 2. **技術用語**: 技術的な固有名詞はそのまま英語を使用してください（例: OIDC, CDK, CloudFormation）
+
+## コミットID提示のルール
+
+エージェントがコメントでコミットIDを提示する際は、必ずGitHubへのリンクを付ける:
+
+**形式**:
+```
+Commit: [短縮SHA](https://github.com/goataka/spec-kit-with-coding-agent/commit/完全SHA)
+```
+
+**例**:
+```
+Commit: [be9f233](https://github.com/goataka/spec-kit-with-coding-agent/commit/be9f233)
+```
+
+**理由**:
+- ユーザーがワンクリックでコミット内容を確認可能
+- コードレビューの効率化
+- 変更履歴の追跡性向上
 
 ## 変更時の確認手順
 
@@ -49,7 +72,7 @@
 3. `/tasks` - 実装タスクの作成
 4. `/implement` - タスクの実装
 
-詳細は <a>.github/agents/AGENTS.md</a> を参照してください。
+詳細は [Agent開発ガイドライン](./.github/agents/AGENTS.md) を参照してください。
 
 ## セキュリティ要件
 
