@@ -65,12 +65,6 @@ jobs:
           npx cdk bootstrap aws://${ACCOUNT_ID}/ap-northeast-1 \
             --context environment=${ENVIRONMENT}
 
-      - name: CDK Synth
-        working-directory: infrastructure
-        env:
-          ENVIRONMENT: ${{ inputs.environment || 'dev' }}
-        run: npx cdk synth --context environment=${ENVIRONMENT}
-
       - name: CDK Deploy
         working-directory: infrastructure
         env:

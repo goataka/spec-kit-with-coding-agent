@@ -2,10 +2,8 @@
 
 このディレクトリには、システムのアーキテクチャに関する仕様を配置します。
 
-## 実装済みドキュメント
-
-- [DynamoDB Clock Table](./dynamodb-clock-table.md) - 打刻テーブルの詳細設計
-- [CI/CD デプロイメント](./cicd-deployment.md) - デプロイフローとセキュリティ
+- <a>CI/CD デプロイメント</a> - デプロイフローとセキュリティ
+- <a>DynamoDB Clock Table</a> - 打刻テーブルの詳細設計
 
 ## 内容
 

@@ -2,9 +2,11 @@
 
 ## 概要
 
-このドキュメントでは、spec-kit勤怠管理システムのAWS CDKインフラストラクチャのCI/CDデプロイメントフローについて説明します。
+このドキュメントでは、attendance-kit（勤怠管理キット）のCI/CDアーキテクチャとデプロイメント戦略について説明します。
 
-## デプロイメントフロー
+## アーキテクチャ概要
+
+### デプロイメントフロー
 
 ```mermaid
 sequenceDiagram
@@ -31,14 +33,13 @@ sequenceDiagram
     GH->>Dev: Notification
 ```
 
-## セキュリティ
+## セキュリティアーキテクチャ
 
-### 認証・認可
+### OIDC認証
 
-- **OIDC認証**: GitHub ActionsとAWS間の認証に使用
-- **一時認証情報**: 永続的なアクセスキー不要
-- **IAMロール**: 最小権限原則に基づく権限設定
-- **リポジトリ制限**: 特定のGitHubリポジトリのみアクセス可能
+- **認証方式**: OpenID Connect (OIDC)
+- **プロバイダー**: GitHub Actions
+- **利点**: 永続的な認証情報不要、一時的なセッショントークンのみ使用
 
 ### アクセス制御
 
@@ -58,120 +59,51 @@ graph LR
     style F fill:#FF9900
 ```
 
-## GitHub Actions ワークフロー
+### セキュリティ原則
 
-### Deploy Workflow
+- **最小権限**: IAMロールは必要最小限の権限のみを付与
+- **リポジトリ制限**: 特定のGitHubリポジトリのみがロールを引き受け可能
+- **一時認証情報**: セッショントークンは1時間で自動失効
+- **暗号化**: データは保存時・転送時ともに暗号化
 
-**ファイル**: `.github/workflows/deploy-to-aws.yml`
+## デプロイメント戦略
 
-**トリガー**:
-- `main`ブランチへのpush（`infrastructure/**`パス）
-- 手動実行（workflow_dispatch）
+### 自動デプロイ
 
-**主要ステップ**:
-1. コードのチェックアウト
-2. Node.js 22環境のセットアップ
-3. 依存関係のインストール
-4. TypeScriptビルド
-5. ユニットテスト実行
-6. OIDC認証
-7. CDK Bootstrap（冪等）
-8. CDK Deploy
-9. スタック出力表示
-
-### デプロイメント戦略
-
-**自動デプロイ**:
-- `infrastructure/`配下の変更が`main`ブランチにマージされると自動実行
-- テストが失敗した場合はデプロイを中断
-
-**手動デプロイ**:
-- GitHub Actions UIから環境（dev/staging）を選択して実行
-- 緊急時の再デプロイやロールバックに使用
-
-## 初回セットアップ
-
-### ステップ1: OIDCプロバイダーとIAMロールの作成
-
-初回のみ、CloudFormationを使用してOIDCプロバイダーとIAMロールを手動で作成します。
-
-1. AWSコンソールでCloudFormationサービスを開く
-2. 新しいスタックを作成
-3. `infrastructure/setup/bootstrap-oidc.yaml`テンプレートをアップロード
-4. スタックを作成
-5. OutputsタブからロールARNをコピー
-
-### ステップ2: GitHub Secretsの設定
-
-1. GitHubリポジトリのSettings > Secrets and variables > Actionsを開く
-2. `AWS_ROLE_TO_ASSUME`に取得したロールARNを設定
-
-### ステップ3: CDKデプロイ
-
-1. GitHub Actionsタブを開く
-2. "Deploy to AWS"ワークフローを実行
-3. 環境として"dev"を選択
-
-このデプロイでCDK管理のOIDCプロバイダーとIAMロールが作成されます。
-
-### ステップ4: GitHub Secretsの更新
-
-1. デプロイ完了後、CloudFormationコンソールで`SpecKit-Dev-Stack`のOutputsを確認
-2. `GitHubActionsRoleArn`の値をコピー
-3. GitHub Secretsの`AWS_ROLE_TO_ASSUME`を新しいARNに更新
-
-### ステップ5: 初回CloudFormationスタックの削除
-
-1. CloudFormationコンソールで初回に作成したスタックを選択
-2. "削除"をクリック
-
-以降はCDK管理のOIDCとIAMロールが使用されます。
-
-## 通常運用
-
-### デプロイフロー
-
-1. `infrastructure/`配下のファイルを変更
-2. PRを作成してレビュー
-3. `main`ブランチにマージ
-4. GitHub Actionsが自動的にデプロイを実行
+- **トリガー**: `infrastructure/`配下のファイルが`main`ブランチにマージされた時
+- **実行内容**: テスト → ビルド → デプロイ
+- **失敗時**: 自動ロールバック（CloudFormation機能）
 
 ### 手動デプロイ
 
-1. GitHub Actionsタブを開く
-2. "Deploy to AWS"ワークフローを選択
-3. "Run workflow"をクリックして環境を選択
+- **用途**: 緊急時の再デプロイ、特定環境へのデプロイ
+- **環境選択**: dev / staging を選択可能
+- **承認**: 不要（完全自動化）
 
-## トラブルシューティング
+## 環境管理
 
-### CDK Bootstrapエラー
+### 環境分離
 
-Bootstrapが必要な場合は、ワークフローが自動的に実行します。手動実行が必要な場合：
+- **dev**: 開発環境
+- **staging**: ステージング環境
+- **分離方法**: 環境ごとに独立したAWSリソース（テーブル名、スタック名に環境名を含む）
 
-```bash
-npx cdk bootstrap aws://ACCOUNT_ID/ap-northeast-1 --context environment=dev
-```
+### 環境構成
 
-### OIDC認証エラー
+各環境は以下を持ちます：
+- 独立したDynamoDBテーブル
+- 独立したCloudFormationスタック
+- 独立したIAMロール
 
-- GitHub Secretsの`AWS_ROLE_TO_ASSUME`が正しく設定されているか確認
-- IAMロールのTrust Policyがリポジトリを許可しているか確認
+## 技術スタック
 
-### デプロイ失敗
+- **IaC**: AWS CDK (TypeScript)
+- **CI/CD**: GitHub Actions
+- **認証**: OIDC
+- **デプロイ**: CloudFormation
+- **テスト**: Jest (ユニットテスト)
 
-- CloudFormationコンソールでスタックイベントを確認
-- GitHub Actionsログで詳細なエラーメッセージを確認
-- CloudFormationが自動的にロールバックを実行
+## 運用とメンテナンス
 
-## 監視
+詳細な運用手順については <a>infrastructure/DEPLOYMENT.md</a> を参照してください。
 
-### ワークフロー実行履歴
-
-- GitHub Actionsタブでワークフロー実行履歴を確認
-- 失敗時のログ分析
-- 成功率のトラッキング
-
-### CloudFormationスタック
-
-- AWSコンソールでスタックステータスを確認
-- デプロイ履歴とイベントログの確認
