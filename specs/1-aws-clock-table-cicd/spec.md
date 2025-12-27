@@ -24,7 +24,7 @@
 
 **受け入れシナリオ**:
 
-1. **前提** インフラストラクチャコードの変更をmainブランチにマージする, **実行** GitHub Actionsワークフローが自動実行される, **結果** DynamoDBテーブル "attendance-kit-dev-clock" がAP-NORTHEAST-1リージョンに正常に作成される
+1. **前提** インフラストラクチャコードの変更をmainブランチにマージする, **実行** GitHub Actionsワークフローが自動実行される, **結果** DynamoDBテーブル "attendance-kyt-dev-clock" がAP-NORTHEAST-1リージョンに正常に作成される
 2. **前提** GitHub Actionsの手動トリガー画面を開く, **実行** "dev"環境を選択してワークフローを実行する, **結果** ワークフローが成功し、CloudFormationスタックがデプロイされる
 3. **前提** 既存のDynamoDBテーブルが存在する, **実行** インフラストラクチャコードを更新してデプロイを実行する, **結果** テーブルが安全に更新される（RETAIN削除ポリシーによりデータは保護される）
 
@@ -86,7 +86,7 @@
 
 ### 機能要件
 
-- **FR-001**: システムはAWS CDKを使用してDynamoDBテーブル "attendance-kit-dev-clock" をデプロイできなければならない
+- **FR-001**: システムはAWS CDKを使用してDynamoDBテーブル "attendance-kyt-dev-clock" をデプロイできなければならない
 - **FR-002**: テーブルはPartition Key "userId" (String) とSort Key "timestamp" (String, ISO 8601形式の日時文字列) を持たなければならない
 - **FR-003**: テーブルはGlobal Secondary Index "DateIndex" を持ち、Partition Key "date" (String, ISO 8601形式の日付文字列) とSort Key "timestamp" (String, ISO 8601形式の日時文字列) でクエリ可能でなければならない
 - **FR-004**: テーブルはOn-Demand課金モード (PAY_PER_REQUEST) で作成されなければならない

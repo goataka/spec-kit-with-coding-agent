@@ -38,7 +38,7 @@
 - [ ] 環境パラメータ対応の `lib/spec-kit-stack.ts` を作成
 - [ ] コンテキストパラメータの読み取りを実装: `environment = app.node.tryGetContext('environment')`
 - [ ] 環境の検証を追加（'dev' または 'staging' のみ許可）
-- [ ] 動的なスタック名を生成: `AttendanceKit-${environment}-Stack`
+- [ ] 動的なスタック名を生成: `AttendanceKyt-${environment}-Stack`
 - [ ] スタックprops（環境、リージョン、説明）を設定
 
 **受入条件**:

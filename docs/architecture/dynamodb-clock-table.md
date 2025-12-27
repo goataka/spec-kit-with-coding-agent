@@ -2,7 +2,7 @@
 
 ## 概要
 
-このドキュメントでは、attendance-kit（勤怠管理キット）のDynamoDB Clock Tableの設計について説明します。
+このドキュメントでは、attendance-kyt（勤怠管理キット）のDynamoDB Clock Tableの設計について説明します。
 
 ## データベース構成図
 
@@ -10,11 +10,11 @@
 graph TB
     subgraph AWS["AWS Cloud (ap-northeast-1)"]
         subgraph CloudFormation["CloudFormation"]
-            stack["AttendanceKit-{Env}-Stack"]
+            stack["AttendanceKyt-{Env}-Stack"]
         end
         
         subgraph DynamoDB["DynamoDB"]
-            table["Clock Table<br/>attendance-kit-{env}-clock"]
+            table["Clock Table<br/>attendance-kyt-{env}-clock"]
             gsi["Global Secondary Index<br/>DateIndex"]
             table --> gsi
         end
@@ -30,7 +30,7 @@ graph TB
 
 ### テーブル構造
 
-**テーブル名**: `attendance-kit-{environment}-clock`
+**テーブル名**: `attendance-kyt-{environment}-clock`
 
 #### Primary Key
 
@@ -89,7 +89,7 @@ erDiagram
 **クエリ**:
 ```typescript
 const params = {
-  TableName: 'attendance-kit-dev-clock',
+  TableName: 'attendance-kyt-dev-clock',
   KeyConditionExpression: 'userId = :userId',
   ExpressionAttributeValues: {
     ':userId': 'user123'
@@ -110,7 +110,7 @@ const result = await dynamodb.query(params).promise();
 **クエリ**:
 ```typescript
 const params = {
-  TableName: 'attendance-kit-dev-clock',
+  TableName: 'attendance-kyt-dev-clock',
   KeyConditionExpression: 'userId = :userId AND #timestamp BETWEEN :start AND :end',
   ExpressionAttributeNames: {
     '#timestamp': 'timestamp'
@@ -136,7 +136,7 @@ const result = await dynamodb.query(params).promise();
 **クエリ**:
 ```typescript
 const params = {
-  TableName: 'attendance-kit-dev-clock',
+  TableName: 'attendance-kyt-dev-clock',
   IndexName: 'DateIndex',
   KeyConditionExpression: '#date = :date',
   ExpressionAttributeNames: {
@@ -161,7 +161,7 @@ const result = await dynamodb.query(params).promise();
 **クエリ**:
 ```typescript
 const params = {
-  TableName: 'attendance-kit-dev-clock',
+  TableName: 'attendance-kyt-dev-clock',
   IndexName: 'DateIndex',
   KeyConditionExpression: '#date = :date AND #timestamp BETWEEN :start AND :end',
   ExpressionAttributeNames: {
@@ -221,7 +221,7 @@ const result = await dynamodb.query(params).promise();
 すべてのリソースには以下のタグが付与されます：
 
 - `Environment`: dev / staging
-- `Project`: attendance-kit
+- `Project`: attendance-kyt
 - `ManagedBy`: CDK
 - `CostCenter`: Engineering
 
@@ -288,8 +288,8 @@ Pay-Per-Request課金モードにより、以下が自動的に対応されま�
 ```bash
 # PITRからのリカバリ例
 aws dynamodb restore-table-to-point-in-time \
-  --source-table-name attendance-kit-dev-clock \
-  --target-table-name attendance-kit-dev-clock-restored \
+  --source-table-name attendance-kyt-dev-clock \
+  --target-table-name attendance-kyt-dev-clock-restored \
   --restore-date-time 2025-12-25T10:00:00Z
 ```
 
