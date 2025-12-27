@@ -24,16 +24,16 @@ const env = {
 const githubRepository = app.node.tryGetContext('githubRepository') || 'goataka/spec-kit-with-coding-agent';
 
 // Create stack with environment-specific name
-const stackName = `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Stack`;
+const stackName = `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Stack`;
 
 new SpecKitStack(app, stackName, {
   env,
   environment,
   githubRepository,
-  description: `DynamoDB clock table for spec-kit attendance system (${environment} environment)`,
+  description: `DynamoDB clock table for attendance-kit (${environment} environment)`,
   tags: {
     Environment: environment,
-    Project: 'spec-kit',
+    Project: 'attendance-kit',
     ManagedBy: 'CDK',
     CostCenter: 'Engineering',
   },

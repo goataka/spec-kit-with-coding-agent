@@ -1,7 +1,7 @@
 {
-  "name": "spec-kit-infrastructure",
+  "name": "attendance-kit-infrastructure",
   "version": "1.0.0",
-  "description": "AWS CDK infrastructure for spec-kit clock table",
+  "description": "AWS CDK infrastructure for attendance-kit clock table",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",

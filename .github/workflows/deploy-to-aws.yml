@@ -76,7 +76,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment || 'dev' }}
         run: |
           echo "Deployment completed successfully for environment: ${ENVIRONMENT}"
-          STACK_NAME="SpecKit-$(echo ${ENVIRONMENT} | sed 's/.*/\u&/')-Stack"
+          STACK_NAME="AttendanceKit-$(echo ${ENVIRONMENT} | sed 's/.*/\u&/')-Stack"
           echo "Stack outputs:"
           aws cloudformation describe-stacks \
             --stack-name ${STACK_NAME} \

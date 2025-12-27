@@ -107,7 +107,7 @@ const startDate = '2025-12-01T00:00:00Z';
 const endDate = '2025-12-31T23:59:59Z';
 
 const params = {
-  TableName: 'spec-kit-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   KeyConditionExpression: 'userId = :userId AND #timestamp BETWEEN :start AND :end',
   ExpressionAttributeNames: { '#timestamp': 'timestamp' },
   ExpressionAttributeValues: {
@@ -152,7 +152,7 @@ const params = {
 ```typescript
 // 特定日の全ユーザー打刻取得
 const params = {
-  TableName: 'spec-kit-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   IndexName: 'DateIndex',
   KeyConditionExpression: '#date = :date',
   ExpressionAttributeNames: { '#date': 'date' },
