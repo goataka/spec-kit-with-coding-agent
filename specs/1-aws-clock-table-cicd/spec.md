@@ -24,7 +24,7 @@
 
 **受け入れシナリオ**:
 
-1. **前提** インフラストラクチャコードの変更をmainブランチにマージする, **実行** GitHub Actionsワークフローが自動実行される, **結果** DynamoDBテーブル "spec-kit-dev-clock" がAP-NORTHEAST-1リージョンに正常に作成される
+1. **前提** インフラストラクチャコードの変更をmainブランチにマージする, **実行** GitHub Actionsワークフローが自動実行される, **結果** DynamoDBテーブル "attendance-kit-dev-clock" がAP-NORTHEAST-1リージョンに正常に作成される
 2. **前提** GitHub Actionsの手動トリガー画面を開く, **実行** "dev"環境を選択してワークフローを実行する, **結果** ワークフローが成功し、CloudFormationスタックがデプロイされる
 3. **前提** 既存のDynamoDBテーブルが存在する, **実行** インフラストラクチャコードを更新してデプロイを実行する, **結果** テーブルが安全に更新される（RETAIN削除ポリシーによりデータは保護される）
 
@@ -46,23 +46,7 @@
 
 ---
 
-### ユーザーストーリー 3 - CloudFormation テンプレートの出力 (優先度: P1)
-
-システム管理者として、CDK synthを手動ワークフローで実行してCloudFormationテンプレートを出力したい。これにより、デプロイ前にインフラストラクチャの変更内容を確認できる。
-
-**この優先度の理由**: デプロイ前の確認とレビューに必要。synthで生成したテンプレートを確認することで、意図しない変更を防ぐことができる。
-
-**独立テスト**: GitHub Actionsでsynthワークフローを手動実行し、成果物としてCloudFormationテンプレートJSONファイルがダウンロード可能であることを確認することでテスト可能。
-
-**受け入れシナリオ**:
-
-1. **前提** インフラストラクチャコードが更新されている, **実行** GitHub Actionsでsynthワークフローを手動実行する, **結果** CloudFormationテンプレートが生成され、成果物としてダウンロード可能になる
-2. **前提** synthワークフローが完了している, **実行** 成果物のCloudFormationテンプレートを開く, **結果** DynamoDBテーブルおよびOIDCリソース定義が確認できる
-3. **前提** CDKコードに構文エラーがある, **実行** synthワークフローを実行する, **結果** ワークフローが失敗し、エラーメッセージが明確に表示される
-
----
-
-### ユーザーストーリー 4 - テーブル設計の理解 (優先度: P2)
+### ユーザーストーリー 3 - テーブル設計の理解 (優先度: P2)
 
 アプリケーション開発者として、打刻テーブルのスキーマ、クエリパターン、制約を理解したい。これにより、効率的にデータの読み書きを実装できる。
 
@@ -102,7 +86,7 @@
 
 ### 機能要件
 
-- **FR-001**: システムはAWS CDKを使用してDynamoDBテーブル "spec-kit-dev-clock" をデプロイできなければならない
+- **FR-001**: システムはAWS CDKを使用してDynamoDBテーブル "attendance-kit-dev-clock" をデプロイできなければならない
 - **FR-002**: テーブルはPartition Key "userId" (String) とSort Key "timestamp" (String, ISO 8601形式の日時文字列) を持たなければならない
 - **FR-003**: テーブルはGlobal Secondary Index "DateIndex" を持ち、Partition Key "date" (String, ISO 8601形式の日付文字列) とSort Key "timestamp" (String, ISO 8601形式の日時文字列) でクエリ可能でなければならない
 - **FR-004**: テーブルはOn-Demand課金モード (PAY_PER_REQUEST) で作成されなければならない
@@ -117,11 +101,7 @@
 - **FR-011**: CloudFormationの出力として、テーブル名、テーブルARN、およびIAMロールARNが提供されなければならない
 - **FR-012**: デプロイワークフローはCDK bootstrapを自動実行しなければならない（環境が未初期化の場合に対応）
 - **FR-013**: Bootstrap処理は冪等性を持ち、既にbootstrap済みの環境でも安全に実行できなければならない
-- **FR-014**: CDK synthを手動で実行してCloudFormationテンプレートを出力するGitHub Actionsワークフローが提供されなければならない
-- **FR-015**: Synth ワークフローは生成されたCloudFormationテンプレートをGitHub Actions成果物としてアップロードしなければならない
-- **FR-016**: Synth ワークフローはTypeScriptのビルドエラーやCDK構文エラーを明確に報告しなければならない
-- **FR-017**: Synth ワークフローは環境 (dev/staging) を入力パラメータとして受け取らなければならない
-- **FR-018**: 初期段階ではコスト削減のため、CloudWatchアラーム（スロットルなど）や有料の監視機能を含めてはならない
+- **FR-014**: 初期段階ではコスト削減のため、CloudWatchアラーム（スロットルなど）や有料の監視機能を含めてはならない
 
 ### 主要エンティティ
 
@@ -139,12 +119,6 @@
   - Resources: DynamoDB Table
   - Outputs: Table Name, Table ARN
 
-- **Synth Workflow**: CloudFormationテンプレートを生成するワークフロー
-  - 手動トリガー専用 (workflow_dispatch)
-  - 入力: 環境 (dev/staging)
-  - 実行: cdk synth
-  - 出力: CloudFormationテンプレート (JSON形式、成果物)
-
 ## 成功基準 *(mandatory)*
 
 ### 測定可能な成果
@@ -156,8 +130,6 @@
 - **SC-005**: CDKコードの変更をmainブランチにマージすると、10分以内に自動デプロイが完了する（bootstrap含む）
 - **SC-006**: ドキュメントを読むことで、開発者がテーブルスキーマとクエリパターンを30分以内に理解できる
 - **SC-007**: デプロイワークフローは未初期化環境でも自動的にbootstrapを実行し、エラーなくデプロイが完了する
-- **SC-008**: CDK synthワークフローを手動実行してから2分以内にCloudFormationテンプレートが成果物としてダウンロード可能になる
-- **SC-009**: Synth ワークフローで生成されたCloudFormationテンプレートは手動レビューが可能な形式（JSON）である
 
 ## 前提条件
 
@@ -170,7 +142,6 @@
 - DynamoDBの打刻テーブル（clock）のみ
 - dev および staging 環境
 - GitHub Actions経由の自動デプロイ（bootstrap含む）
-- 手動実行可能なsynthワークフロー（CloudFormationテンプレート出力）
 - CDK管理によるOIDC認証（初回のみCloudFormationでセットアップ、以降はCDK管理）
 - コスト削減のための監視機能の最小化（CloudWatchアラームなし）
 

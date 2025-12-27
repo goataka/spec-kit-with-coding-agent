@@ -1,0 +1,84 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+
+permissions:
+  id-token: write   # OIDC認証に必要
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: infrastructure/package-lock.json
+
+      - name: Install dependencies
+        working-directory: infrastructure
+        run: npm ci
+
+      - name: Build TypeScript
+        working-directory: infrastructure
+        run: npm run build
+
+      - name: Run tests
+        working-directory: infrastructure
+        run: npm test
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ap-northeast-1
+
+      - name: CDK Bootstrap
+        working-directory: infrastructure
+        env:
+          ENVIRONMENT: ${{ inputs.environment || 'dev' }}
+        run: |
+          echo "Running CDK bootstrap (idempotent operation)..."
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          npx cdk bootstrap aws://${ACCOUNT_ID}/ap-northeast-1 \
+            --context environment=${ENVIRONMENT}
+
+      - name: CDK Deploy
+        working-directory: infrastructure
+        env:
+          ENVIRONMENT: ${{ inputs.environment || 'dev' }}
+        run: npx cdk deploy --require-approval never --all --context environment=${ENVIRONMENT}
+
+      - name: Output deployment results
+        env:
+          ENVIRONMENT: ${{ inputs.environment || 'dev' }}
+        run: |
+          echo "Deployment completed successfully for environment: ${ENVIRONMENT}"
+          STACK_NAME="AttendanceKit-$(echo ${ENVIRONMENT} | sed 's/.*/\u&/')-Stack"
+          echo "Stack outputs:"
+          aws cloudformation describe-stacks \
+            --stack-name ${STACK_NAME} \
+            --query 'Stacks[0].Outputs' \
+            --output table

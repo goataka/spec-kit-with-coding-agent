@@ -2,6 +2,10 @@
 
 このディレクトリには、ビジネスロジックと要件に関する仕様を配置します。
 
+## 実装済みドキュメント
+
+- [Clock Table ビジネス要件](./clock-table-requirements.md) - 打刻テーブルのビジネス要件とユースケース
+
 ## 内容
 
 - ビジネス要件
@@ -21,3 +25,4 @@
 - `{feature-name}-requirements.md` - 機能要件
 - `{domain-name}-model.md` - ドメインモデル
 - `{process-name}-flow.md` - ビジネスフロー
+

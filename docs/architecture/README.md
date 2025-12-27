@@ -1,6 +1,7 @@
-# アーキテクチャ仕様
+# アーキテクチャドキュメント
 
-このディレクトリには、システムのアーキテクチャに関する仕様を配置します。
+- [DynamoDB Clock Table](./dynamodb-clock-table.md) - 打刻テーブルの詳細設計
+- [CI/CD デプロイメント戦略](./cicd-deployment-strategy.md) - デプロイ戦略とセキュリティアーキテクチャ
 
 ## 内容
 
@@ -21,3 +22,4 @@
 - `{feature-name}-architecture.md` - 機能別アーキテクチャ
 - `{system-name}-infrastructure.md` - インフラストラクチャ設計
 - `{component-name}-api.md` - API設計
+

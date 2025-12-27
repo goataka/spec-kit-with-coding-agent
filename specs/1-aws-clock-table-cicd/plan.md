@@ -51,16 +51,12 @@ graph TB
         infra_config["cdk.json"]
         workflows[".github/workflows/"]
         wf_deploy["deploy-dev-to-aws.yml"]
-        wf_bootstrap["cdk-bootstrap.yml"]
-        wf_synth["cdk-synth.yml"]
         
         infra --> infra_files
         infra_files --> infra_bin
         infra_files --> infra_lib
         infra_files --> infra_config
         workflows --> wf_deploy
-        workflows --> wf_bootstrap
-        workflows --> wf_synth
     end
     
     subgraph Actions["GitHub Actions"]
@@ -80,7 +76,7 @@ graph TB
         
         subgraph Stack1["CloudFormation: SpecKitDevStack"]
             dynamo["DynamoDB Table"]
-            dynamo_name["spec-kit-dev-clock"]
+            dynamo_name["attendance-kit-dev-clock"]
             dynamo_keys["userId + timestamp"]
             dynamo_gsi["GSI: DateIndex"]
             dynamo_billing["PAY_PER_REQUEST"]
@@ -147,20 +143,6 @@ flowchart TD
     E -.-> E2[IAMロール]
 ```
 
-#### 手動Synth (cdk-synth.yml)
-```mermaid
-flowchart TD
-    A[手動トリガー] --> A1[環境指定]
-    A1 --> B[TypeScript ビルド]
-    B --> C[cdk synth]
-    C --> D[CloudFormation テンプレート生成]
-    D --> E[成果物アップロード]
-    E --> F[手動ダウンロード可能]
-    
-    E -.-> E1[JSON形式]
-    E -.-> E2[30日間保持]
-```
-
 ## 3. CDKスタック構造
 
 ### 3.1 ディレクトリ構成
@@ -200,13 +182,13 @@ const env = {
 };
 
 // Stackインスタンス作成（環境をパラメータとして渡す）
-new SpecKitStack(app, `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Stack`, {
+new SpecKitStack(app, `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-Stack`, {
   env,
   environment,
-  description: `DynamoDB clock table for spec-kit attendance system (${environment} environment)`,
+  description: `DynamoDB clock table for attendance-kit (${environment} environment)`,
   tags: {
     Environment: environment,
-    Project: 'spec-kit',
+    Project: 'attendance-kit',
     ManagedBy: 'CDK',
   },
 });
@@ -230,7 +212,7 @@ export class SpecKitStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SpecKitStackProps) {
     super(scope, id, props);
 
-    const { environment, githubRepository = 'goataka/spec-kit-with-coding-agent' } = props;
+    const { environment, githubRepository = 'goataka/attendance-kit' } = props;
 
     // OIDC Provider for GitHub Actions
     const githubProvider = new iam.OpenIdConnectProvider(this, 'GitHubProvider', {
@@ -290,7 +272,7 @@ export class SpecKitStack extends cdk.Stack {
 
     // DynamoDB Clock Table（環境ごとに異なるテーブル名）
     const clockTable = new dynamodb.Table(this, 'ClockTable', {
-      tableName: `spec-kit-${environment}-clock`,
+      tableName: `attendance-kit-${environment}-clock`,
       partitionKey: {
         name: 'userId',
         type: dynamodb.AttributeType.STRING,
@@ -323,25 +305,25 @@ export class SpecKitStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'TableName', {
       value: clockTable.tableName,
       description: `DynamoDB clock table name (${environment})`,
-      exportName: `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableName`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableName`,
     });
 
     new cdk.CfnOutput(this, 'TableArn', {
       value: clockTable.tableArn,
       description: `DynamoDB clock table ARN (${environment})`,
-      exportName: `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-ClockTableArn`,
     });
 
     new cdk.CfnOutput(this, 'GitHubActionsRoleArn', {
       value: githubActionsRole.roleArn,
       description: `IAM Role ARN for GitHub Actions (${environment})`,
-      exportName: `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GitHubActionsRoleArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-GitHubActionsRoleArn`,
     });
 
     new cdk.CfnOutput(this, 'OIDCProviderArn', {
       value: githubProvider.openIdConnectProviderArn,
       description: `OIDC Provider ARN for GitHub Actions (${environment})`,
-      exportName: `SpecKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-OIDCProviderArn`,
+      exportName: `AttendanceKit-${environment.charAt(0).toUpperCase() + environment.slice(1)}-OIDCProviderArn`,
     });
   }
 }
@@ -351,7 +333,7 @@ export class SpecKitStack extends cdk.Stack {
 
 ```json
 {
-  "name": "spec-kit-infrastructure",
+  "name": "attendance-kit-infrastructure",
   "version": "1.0.0",
   "scripts": {
     "build": "tsc",
@@ -461,75 +443,12 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment || 'dev' }}
         run: |
           echo "Deployment completed successfully for environment: ${ENVIRONMENT}"
-          STACK_NAME="SpecKit-$(echo ${ENVIRONMENT} | sed 's/.*/\u&/')-Stack"
+          STACK_NAME="AttendanceKit-$(echo ${ENVIRONMENT} | sed 's/.*/\u&/')-Stack"
           echo "Stack outputs:"
           aws cloudformation describe-stacks \
             --stack-name ${STACK_NAME} \
             --query 'Stacks[0].Outputs' \
             --output table
-```
-
-### 4.2 Synth Workflow (.github/workflows/cdk-synth.yml)
-
-```yaml
-name: CDK Synth
-
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment (dev/staging)'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-
-permissions:
-  contents: read
-
-jobs:
-  synth:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: infrastructure/package-lock.json
-
-      - name: Install dependencies
-        working-directory: infrastructure
-        run: npm ci
-
-      - name: Build TypeScript
-        working-directory: infrastructure
-        run: npm run build
-
-      - name: CDK Synth
-        working-directory: infrastructure
-        env:
-          ENVIRONMENT: ${{ inputs.environment }}
-        run: npx cdk synth --context environment=${ENVIRONMENT} --output ./cdk.out
-
-      - name: Upload CloudFormation templates
-        uses: actions/upload-artifact@v4
-        with:
-          name: cloudformation-templates-${{ inputs.environment }}
-          path: infrastructure/cdk.out/*.template.json
-          retention-days: 30
-
-      - name: Summary
-        run: |
-          echo "✅ CloudFormation templates generated successfully"
-          echo "📦 Templates available as artifacts for manual review"
-          echo "Environment: ${{ inputs.environment }}"
 ```
 
 ## 5. OIDC認証フロー
@@ -553,7 +472,7 @@ Parameters:
   
   GitHubRepo:
     Type: String
-    Default: spec-kit-with-coding-agent
+    Default: attendance-kit
     Description: GitHub repository name
   
   RoleName:
@@ -679,7 +598,7 @@ const githubActionsRole = new iam.Role(this, 'GitHubActionsRole', {
         'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
       },
       StringLike: {
-        'token.actions.githubusercontent.com:sub': `repo:goataka/spec-kit-with-coding-agent:*`,
+        'token.actions.githubusercontent.com:sub': `repo:goataka/attendance-kit:*`,
       },
     },
     'sts:AssumeRoleWithWebIdentity'
@@ -725,7 +644,7 @@ AWSコンソールから:
         "cloudformation:ListStacks"
       ],
       "Resource": [
-        "arn:aws:cloudformation:*:*:stack/spec-kit-*",
+        "arn:aws:cloudformation:*:*:stack/attendance-kit-*",
         "arn:aws:cloudformation:*:*:stack/CDKToolkit/*"
       ]
     },
@@ -745,7 +664,7 @@ AWSコンソールから:
         "dynamodb:TagResource",
         "dynamodb:UntagResource"
       ],
-      "Resource": "arn:aws:dynamodb:*:*:table/spec-kit-*-clock"
+      "Resource": "arn:aws:dynamodb:*:*:table/attendance-kit-*-clock"
     },
     {
       "Sid": "AllowS3ForCdkBootstrapBucket",
@@ -840,7 +759,7 @@ AWSコンソールから:
 ```typescript
 // Primary Key Query
 const params = {
-  TableName: 'spec-kit-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   KeyConditionExpression: 'userId = :userId',
   ExpressionAttributeValues: {
     ':userId': 'user123'
@@ -852,7 +771,7 @@ const params = {
 ```typescript
 // Primary Key + Range Query
 const params = {
-  TableName: 'spec-kit-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   KeyConditionExpression: 'userId = :userId AND #timestamp BETWEEN :start AND :end',
   ExpressionAttributeNames: {
     '#timestamp': 'timestamp'
@@ -869,7 +788,7 @@ const params = {
 ```typescript
 // GSI Query
 const params = {
-  TableName: 'spec-kit-dev-clock',
+  TableName: 'attendance-kit-dev-clock',
   IndexName: 'DateIndex',
   KeyConditionExpression: '#date = :date',
   ExpressionAttributeNames: {
@@ -988,7 +907,7 @@ test('DynamoDB Table Created', () => {
   const template = Template.fromStack(stack);
 
   template.hasResourceProperties('AWS::DynamoDB::Table', {
-    TableName: 'spec-kit-dev-clock',
+    TableName: 'attendance-kit-dev-clock',
     BillingMode: 'PAY_PER_REQUEST',
     PointInTimeRecoverySpecification: {
       PointInTimeRecoveryEnabled: true
@@ -1019,13 +938,13 @@ test('Global Secondary Index Created', () => {
 
 1. **テーブル存在確認**
    ```bash
-   aws dynamodb describe-table --table-name spec-kit-dev-clock
+   aws dynamodb describe-table --table-name attendance-kit-dev-clock
    ```
 
 2. **書き込みテスト**
    ```bash
    aws dynamodb put-item \
-     --table-name spec-kit-dev-clock \
+     --table-name attendance-kit-dev-clock \
      --item '{
        "userId": {"S": "test-user"},
        "timestamp": {"S": "2025-12-25T09:00:00Z"},
@@ -1037,7 +956,7 @@ test('Global Secondary Index Created', () => {
 3. **クエリテスト (Primary Key)**
    ```bash
    aws dynamodb query \
-     --table-name spec-kit-dev-clock \
+     --table-name attendance-kit-dev-clock \
      --key-condition-expression "userId = :userId" \
      --expression-attribute-values '{":userId":{"S":"test-user"}}'
    ```
@@ -1045,7 +964,7 @@ test('Global Secondary Index Created', () => {
 4. **クエリテスト (GSI)**
    ```bash
    aws dynamodb query \
-     --table-name spec-kit-dev-clock \
+     --table-name attendance-kit-dev-clock \
      --index-name DateIndex \
      --key-condition-expression "#date = :date" \
      --expression-attribute-names '{"#date":"date"}' \
@@ -1054,9 +973,7 @@ test('Global Secondary Index Created', () => {
 
 ### 9.3 GitHub Actions ワークフローテスト
 
-1. **Synth Workflow**: 手動実行してテンプレート生成を確認
-2. **Bootstrap Workflow**: テスト環境で手動実行
-3. **Deploy Workflow**: PR作成してdry-run確認後、mainマージで実行
+1. **Deploy Workflow**: PR作成してdry-run確認後、mainマージで実行
 
 ## 10. モニタリング・運用（コスト最小化版）
 
@@ -1128,8 +1045,6 @@ test('Global Secondary Index Created', () => {
 
 ### Phase 2: GitHub Actionsワークフロー (P1)
 - Deploy ワークフロー作成
-- Bootstrap ワークフロー作成
-- Synth ワークフロー作成
 - OIDC認証設定
 
 ### Phase 3: ドキュメント (P1-P2)
@@ -1153,9 +1068,7 @@ test('Global Secondary Index Created', () => {
 | SC-005: 10分以内自動デプロイ | mainマージ後の自動実行時間計測 |
 | SC-006: 30分で理解可能 | 開発者にドキュメントレビュー依頼 |
 | SC-007: 3分以内bootstrap | GitHub Actions bootstrap実行時間計測 |
-| SC-008: 2分以内synth | GitHub Actions synth実行時間計測 |
-| SC-009: Bootstrap冪等性 | 同環境で複数回実行テスト |
-| SC-010: JSON形式テンプレート | 成果物ダウンロード確認 |
+| SC-008: Bootstrap冪等性 | 同環境で複数回実行テスト |
 
 ## 15. 次のステップ
 
