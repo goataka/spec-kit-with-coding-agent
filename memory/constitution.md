@@ -1,6 +1,6 @@
 # Project Constitution: 勤怠管理システム
 
-**Version**: 1.5.0  
+**Version**: 1.6.0  
 **Ratified**: 2025-12-24  
 **Last Amended**: 2025-12-27
 
@@ -79,6 +79,42 @@
    # 日本語/英語の形式をチェック
    grep -n " / " [file.md]
    ```
+
+## Documentation Structure Policy
+
+### ドキュメント配置の原則
+
+1. **戦略的・概念的なドキュメント**: `docs/`ディレクトリに配置
+   - アーキテクチャ設計
+   - ビジネス要件
+   - デプロイメント戦略
+
+2. **運用的・手順的なドキュメント**: 該当ファイルと同じフォルダに配置
+   - ワークフロー詳細: `.github/workflows/`に`{workflow-name}.md`
+   - インフラ運用: `infrastructure/`に`DEPLOYMENT.md`等
+   - セットアップ手順: `infrastructure/setup/`に`README.md`
+
+3. **アクションドキュメントの命名規則**
+   - ワークフローファイル: `{name}.yml`
+   - ドキュメント: `{name}.md`（同じフォルダに配置）
+   - サマリー: `README.md`（ディレクトリ全体の概要）
+
+### 例
+
+```
+.github/workflows/
+  ├── README.md                 # ワークフロー全体のサマリー
+  ├── deploy-to-aws.yml         # デプロイワークフロー
+  └── deploy-to-aws.md          # デプロイワークフロー詳細
+
+docs/architecture/
+  └── cicd-deployment-strategy.md  # 戦略的な内容
+
+infrastructure/
+  ├── DEPLOYMENT.md             # 運用手順
+  └── setup/
+      └── README.md             # セットアップ手順
+```
 
 ## Governance
 

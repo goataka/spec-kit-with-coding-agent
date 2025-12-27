@@ -1,8 +1,9 @@
-# アーキテクチャ仕様
+# アーキテクチャドキュメント
 
-このディレクトリには、システムのアーキテクチャに関する仕様を配置します。
+このディレクトリには、attendance-kyt（勤怠管理キット）のアーキテクチャドキュメントが含まれています。
 
-- <a>DynamoDB Clock Table</a> - 打刻テーブルの詳細設計
+- [DynamoDB Clock Table](./dynamodb-clock-table.md) - 打刻テーブルの詳細設計
+- [CI/CD デプロイメント戦略](./cicd-deployment-strategy.md) - デプロイ戦略とセキュリティアーキテクチャ
 
 ## 内容
 

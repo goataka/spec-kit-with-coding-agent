@@ -1,7 +1,7 @@
 # GitHub Copilot カスタムインストラクション
 
 このドキュメントに記載された指示に加えて、以下のリンク先ドキュメントの内容も指示として考慮してください:
-- [Agent開発ガイドライン](./.github/agents/AGENTS.md) - Spec-kitワークフローの詳細
+- [Agent開発ガイドライン](./agents/AGENTS.md) - Spec-kitワークフローの詳細
 - [プロジェクト憲法](../memory/constitution.md) - プロジェクトの核心原則
 
 ## 言語ポリシー
@@ -72,7 +72,7 @@ Commit: [be9f233](https://github.com/goataka/spec-kit-with-coding-agent/commit/b
 3. `/tasks` - 実装タスクの作成
 4. `/implement` - タスクの実装
 
-詳細は [Agent開発ガイドライン](./.github/agents/AGENTS.md) を参照してください。
+詳細は [Agent開発ガイドライン](./agents/AGENTS.md) を参照してください。
 
 ## セキュリティ要件
 
